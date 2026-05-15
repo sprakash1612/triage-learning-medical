@@ -1,0 +1,664 @@
+% ============================================================
+%  MAIN THESIS FILE
+%  Title  : Uncertainty-Aware Triage Learning for Medical Image
+%            Diagnosis: A Human-AI Collaborative Framework
+%  Author : Shanu Prakash
+%  Guide  : Gyanendra Kumar
+%  Inst.  : Indian Institute of Technology Patna
+%  Degree : M.Tech. in Artificial Intelligence & Data Science
+% ============================================================
+
+\documentclass[12pt,a4paper]{report}
+
+% ── Encoding & fonts ─────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% ── Page layout ──────────────────────────────────────────────
+% IIT Patna thesis: left 1.5in (binding), others 1in
+\usepackage[
+  top    = 1in,
+  bottom = 1in,
+  left   = 1.5in,
+  right  = 1in
+]{geometry}
+
+% ── Line spacing (1.5 as required) ───────────────────────────
+\usepackage{setspace}
+\onehalfspacing
+
+% ── Mathematics ──────────────────────────────────────────────
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% ── Graphics ─────────────────────────────────────────────────
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+
+% ── Tables ───────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+
+% ── Colours ──────────────────────────────────────────────────
+\usepackage[dvipsnames,table]{xcolor}
+
+% ── Bibliography (numeric superscript, as per IIT Patna) ─────
+\usepackage[backend=biber, style=numeric, sorting=none]{biblatex}
+\addbibresource{references.bib}
+
+% ── Hyperlinks ───────────────────────────────────────────────
+\usepackage[
+  colorlinks = true,
+  linkcolor  = black,
+  citecolor  = black,
+  urlcolor   = blue,
+  bookmarks  = true,
+  pdfauthor  = {Shanu Prakash},
+  pdftitle   = {Triage Learning for Medical Image Diagnosis}
+]{hyperref}
+
+% ── Header / footer ──────────────────────────────────────────
+\usepackage{fancyhdr}
+
+% ── Chapter title styling ────────────────────────────────────
+\usepackage{titlesec}
+% Chapter heading: centred, all caps, as per IIT Patna format
+\titleformat{\chapter}[display]
+  {\normalfont\large\bfseries\centering}
+  {\MakeUppercase{\chaptertitlename}\ \thechapter}
+  {0.5em}
+  {\large\MakeUppercase}
+\titlespacing*{\chapter}{0pt}{-10pt}{20pt}
+
+% Section headings: bold
+\titleformat{\section}{\normalfont\normalsize\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+
+% ── TOC depth ────────────────────────────────────────────────
+\usepackage{tocloft}
+\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{3}
+
+% ── Miscellaneous ────────────────────────────────────────────
+\usepackage{newunicodechar}
+\newunicodechar{✓}{\checkmark}
+\usepackage{microtype}
+\usepackage{parskip}          % space between paragraphs, no indent
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% ── Fancy page style for body ────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\small\nouppercase{\leftmark}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Chapter–based figure/table numbering  (e.g. Fig 2.1) ─────
+\usepackage{chngcntr}
+\counterwithin{figure}{chapter}
+\counterwithin{table}{chapter}
+
+% ─────────────────────────────────────────────────────────────
+%  DOCUMENT
+% ─────────────────────────────────────────────────────────────
+\begin{document}
+
+% ═══════════════════════════════════════════════════════════════
+%  FRONT MATTER  (roman page numbering)
+% ═══════════════════════════════════════════════════════════════
+\pagenumbering{roman}
+\pagestyle{empty}   % no headers/footers on title pages
+
+% ──────────────────────────────────────────────────────────────
+%  PAGE 1 — Cover page (logo + institute name)
+% ──────────────────────────────────────────────────────────────
+\begin{titlepage}
+\begin{center}
+
+% \vspace{1.4cm}
+\vspace*{1.5cm}
+{\LARGE\bfseries Triage Learning : Human-AI }\\[0.4em]
+{\LARGE\bfseries Collaboration In Medical Diagnosis}
+
+\vspace{1cm}
+
+A Thesis Submitted in Partial Fulfilment of the Requirements\\[0.3em]
+for the Degree of
+
+\vspace{0.3cm}
+
+{\Large\bfseries MASTER OF TECHNOLOGY}\\[0.25em]
+{\large\bfseries in}\\[0.25em]
+{\Large\bfseries Artificial Intelligence \& Data Science}
+
+\vspace{0.7cm}
+
+{\large by}\\[0.5em]
+{\Large\bfseries Shanu Prakash}\\[0.3em]
+{\normalsize Roll No.: 24A03RES171}
+
+\vspace{0.6cm}
+
+{\large Under the Supervision of}\\[0.4em]
+{\large\bfseries Gyanendra Kumar}\\[0.2em]
+{\normalsize Senior Manager, CDTO -- GSK}\\
+{\normalsize (External Supervisor)}
+
+\vfill
+\includegraphics[width=0.3\linewidth]{iit_patna_logo.png}\\[0.6em]
+% {\large\bfseries Department of Computer Science and Engineering}\\[0.3em]
+{\large\bfseries Indian Institute of Technology Patna}\\[0.3em]
+{\normalsize Patna -- 801103, Bihar, India}\\[0.5em]
+{\normalsize May 2026}
+\begin{center}
+{\bfseries Copyright \copyright\ Shanu Prakash, 2026}\\
+{\normalsize All rights reserved.}
+\end{center}
+\end{center}
+\end{titlepage}
+
+% % ──────────────────────────────────────────────────────────────
+% %  PAGE 2 — Copyright notice
+% % ──────────────────────────────────────────────────────────────
+% \newpage
+% \thispagestyle{empty}
+% \vspace*{\fill}
+
+% \vspace*{\fill}
+% ──────────────────────────────────────────────────────────────
+%  PAGE 5 — Acknowledgements
+% ──────────────────────────────────────────────────────────────
+\newpage
+\begin{center}
+{\large\bfseries ACKNOWLEDGEMENTS}
+\end{center}
+
+\vspace{0.8cm}
+
+I express my sincere gratitude to my supervisor, \textbf{Gyanendra
+Kumar} (Senior Manager, CDTO -- GSK), for his expert guidance,
+consistent encouragement, and constructive feedback throughout the
+course of this research. His deep understanding of the intersection
+between machine learning and clinical practice shaped the direction of
+this work in ways that would not have been possible otherwise.
+
+I am grateful to the faculty at \textbf{Indian Institute of Technology Patna} for
+providing a stimulating academic environment and for the strong
+foundation in artificial intelligence and data science imparted during
+the M.Tech programme.
+
+I acknowledge the creators of the \textbf{MedMNIST} benchmark
+collection~\cite{yang2021medmnist} for providing standardised,
+publicly available medical imaging datasets, and the authors of
+\textbf{PathMNIST}~\cite{kather2019predicting},
+\textbf{ChestMNIST}~\cite{wang2017chestx}, and
+\textbf{DermaMNIST}~\cite{tschandl2018ham10000} for their
+foundational data contributions to the medical AI community.
+
+The open-source software community that developed and maintains
+\textbf{PyTorch}, \textbf{timm}, and the broader scientific Python
+ecosystem deserves acknowledgement for making reproducible deep learning
+research accessible.
+
+Finally, I am deeply grateful to my family for their unwavering support
+and patience during the demanding periods of this work.
+
+\vspace{1.5cm}
+
+\begin{flushright}
+\textbf{Shanu Prakash}\\
+Indian Institute of Technology Patna\\
+May 2026
+\end{flushright}
+
+% ──────────────────────────────────────────────────────────────
+%  PAGE 3 — Certificate
+% ──────────────────────────────────────────────────────────────
+\newpage
+\thispagestyle{plain}
+\setcounter{page}{1}          % certificate = page i
+
+\begin{center}
+{\large\bfseries CERTIFICATE}
+\end{center}
+
+\vspace{0.8cm}
+
+\noindent This is to certify that the M.Tech thesis titled
+\textbf{``Triage Learning : Human-AI Collaboration In Medical Diagnosis''}, submitted by
+\textbf{Shanu Prakash} (Roll No.: 24A03RES171), in partial
+fulfilment of the requirements for the degree of
+\textbf{Master of Technology} in \textbf{Artificial Intelligence \&
+Data Science} at the \textbf{Indian Institute of Technology Patna}, is a
+record of original work carried out under supervision.
+
+To the best of my knowledge, the work reported in this thesis is
+original and has not been submitted to any other university or institute
+for any degree or diploma.
+
+\vspace{2.2cm}
+
+\begin{flushright}
+\includegraphics[width=3cm]{supervisor_sign.png}\\[0.3em]
+\textbf{Gyanendra Kumar}\\
+External Project Supervisor\\
+Senior Manager, CDTO -- GSK
+\end{flushright}
+
+\vspace{1.5cm}
+
+\noindent\textbf{Date:} \today\\[0.3em]
+\noindent\textbf{Place:} Patna
+
+% ──────────────────────────────────────────────────────────────
+%  PAGE 4 — Declaration by candidate
+% ──────────────────────────────────────────────────────────────
+\newpage
+\begin{center}
+{\large\bfseries DECLARATION}
+\end{center}
+
+\vspace{0.8cm}
+
+\noindent I, \textbf{Shanu Prakash} (Roll No.: 24A03RES171), a
+student of M.Tech in Artificial Intelligence \& Data Science at the
+Indian Institute of Technology Patna, hereby declare that the thesis
+titled \textbf{``Triage Learning : Human-AI Collaboration In Medical Diagnosis''} submitted by me for the
+partial fulfilment of the requirements for the award of the degree of
+Master of Technology is a record of original research work carried out
+by me under the supervision of \textbf{Gyanendra Kumar}.
+
+I further declare that the work reported in this thesis has not been
+submitted and will not be submitted, either in part or in full, for the
+award of any other degree or diploma in this institute or any other
+institute or university.
+
+\vspace{2.5cm}
+
+\begin{flushright}
+\textbf{Shanu Prakash}\\
+Roll No.: 24A03RES171\\
+M.Tech., Artificial Intelligence \& Data Science\\
+Indian Institute of Technology Patna
+\end{flushright}
+
+\vspace{1cm}
+
+\noindent\textbf{Date:} \today\\[0.3em]
+\noindent\textbf{Place:} Patna
+
+
+
+% ──────────────────────────────────────────────────────────────
+%  PAGE 6 — Abstract
+% ──────────────────────────────────────────────────────────────
+\newpage
+\begin{center}
+{\large\bfseries ABSTRACT}
+\end{center}
+
+\vspace{0.8cm}
+
+Medical diagnostic errors remain a persistent challenge in healthcare,
+with misdiagnoses contributing to significant patient morbidity and
+mortality. While deep learning models have demonstrated impressive
+performance in medical image classification, their deployment in
+clinical settings is hindered by a lack of uncertainty quantification
+and an inability to recognise when predictions may be unreliable. This
+thesis presents a comprehensive framework for \emph{uncertainty-aware
+triage learning} that intelligently combines AI predictions on
+confident cases with human expert review of uncertain cases, optimising
+the accuracy-automation trade-off through principled threshold selection.
+
+Four convolutional and transformer-based architectures (ResNet18,
+DenseNet121, EfficientNet-B3, and ViT-Small) are evaluated on three
+MedMNIST datasets: PathMNIST (histopathology, 9 classes), ChestMNIST
+(chest X-ray, 14 binary labels), and DermaMNIST (dermatoscopy, 7
+classes). Monte Carlo Dropout and Deep Ensembles are compared as
+uncertainty quantification methods, and Temperature Scaling is applied
+for post-hoc calibration.
+
+On PathMNIST, the baseline ResNet18 achieves 89.04\% accuracy. Monte
+Carlo Dropout uncertainty attains a point-biserial correlation of 0.498
+with prediction errors and an AUROC of 0.762 as an error detector. The
+threshold-based triage system improves accuracy to \textbf{97.35\%},
+reducing misdiagnoses from 787 to 190 --- a \textbf{75.8\% error
+reduction} --- while automating 63.9\% of cases.
+Temperature Scaling reduces Expected Calibration Error from 0.087 to
+0.031. Deep Ensembles provide marginally higher triage accuracy
+(98.14\%) at a fivefold computational cost. EfficientNet-B3 achieves
+the highest standalone accuracy (91.38\%); its superiority over
+ResNet18, DenseNet121, and ViT-Small is confirmed by McNemar's test
+after Bonferroni correction. Cross-dataset experiments confirm
+consistent triage benefit on ChestMNIST (+9.3 pp) and DermaMNIST
+(+10.4 pp). Grad-CAM analysis validates clinically plausible model
+attention and identifies systematic failure modes. Robustness
+experiments show that MC Dropout uncertainty increases monotonically
+under Gaussian noise, providing natural out-of-distribution detection.
+
+The framework demonstrates that, for an institution processing 10,000
+cases annually, the accuracy-optimal triage configuration prevents
+approximately 830 misdiagnoses per year while reducing cost from
+\$10.96 to \$4.53 per case, with a staffing requirement of 2--4
+full-time equivalent reviewers. All results are supported by 95\%
+bootstrap confidence intervals.
+
+\vspace{0.6cm}
+
+\noindent\textbf{Keywords:} Triage learning, uncertainty quantification,
+Monte Carlo Dropout, deep ensembles, medical image classification,
+human-AI collaboration, calibration, Grad-CAM, MedMNIST.
+
+% ──────────────────────────────────────────────────────────────
+%  TABLE OF CONTENTS
+% ──────────────────────────────────────────────────────────────
+\newpage
+\pagestyle{plain}
+\tableofcontents
+
+% ──────────────────────────────────────────────────────────────
+%  LIST OF FIGURES
+% ──────────────────────────────────────────────────────────────
+\newpage
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Figures}
+
+% ──────────────────────────────────────────────────────────────
+%  LIST OF TABLES
+% ──────────────────────────────────────────────────────────────
+\newpage
+\listoftables
+\addcontentsline{toc}{chapter}{List of Tables}
+
+% ──────────────────────────────────────────────────────────────
+%  LIST OF ABBREVIATIONS
+% ──────────────────────────────────────────────────────────────
+\newpage
+\begin{center}
+{\large\bfseries LIST OF ABBREVIATIONS}
+\end{center}
+\addcontentsline{toc}{chapter}{List of Abbreviations}
+
+\vspace{0.5cm}
+
+\begin{longtable}{@{} >{\footnotesize}p{3.2cm} >{\footnotesize}p{10.6cm} @{}}
+\toprule
+\textbf{Abbreviation} & \textbf{Expansion} \\
+\midrule
+AI     & Artificial Intelligence \\[3pt]
+AR     & Automation Rate \\[3pt]
+AUC    & Area Under the Curve \\[3pt]
+AUROC  & Area Under the Receiver Operating Characteristic Curve \\[3pt]
+BCC    & Basal Cell Carcinoma \\[3pt]
+BCE    & Binary Cross-Entropy \\[3pt]
+CAM    & Class Activation Mapping \\[3pt]
+CNN    & Convolutional Neural Network \\[3pt]
+DR     & Deferral Rate \\[3pt]
+ECE    & Expected Calibration Error \\[3pt]
+ELBO   & Evidence Lower Bound \\[3pt]
+FTE    & Full-Time Equivalent \\[3pt]
+GAP    & Global Average Pooling \\[3pt]
+Grad-CAM & Gradient-weighted Class Activation Mapping \\[3pt]
+H\&E   & Haematoxylin and Eosin \\[3pt]
+HITL   & Human-in-the-Loop \\[3pt]
+JSD    & Jensen-Shannon Divergence \\[3pt]
+KL     & Kullback-Leibler (divergence) \\[3pt]
+LR     & Learning Rate \\[3pt]
+MBConv & Mobile Inverted Bottleneck Convolution \\[3pt]
+MC     & Monte Carlo \\[3pt]
+MCE    & Maximum Calibration Error \\[3pt]
+MedMNIST & Medical Modified National Institute of Standards and Technology \\[3pt]
+MHA    & Multi-Head Attention \\[3pt]
+MSA    & Multi-head Self-Attention \\[3pt]
+NLL    & Negative Log-Likelihood \\[3pt]
+NLP    & Natural Language Processing \\[3pt]
+RGB    & Red, Green, Blue \\[3pt]
+ReLU   & Rectified Linear Unit \\[3pt]
+ResNet & Residual Network \\[3pt]
+ROC    & Receiver Operating Characteristic \\[3pt]
+SE     & Squeeze-and-Excitation \\[3pt]
+SoTA   & State of the Art \\[3pt]
+TCAV   & Testing with Concept Activation Vectors \\[3pt]
+UQ     & Uncertainty Quantification \\[3pt]
+ViT    & Vision Transformer \\[3pt]
+\bottomrule
+\end{longtable}
+
+% ──────────────────────────────────────────────────────────────
+%  LIST OF SYMBOLS
+% ──────────────────────────────────────────────────────────────
+\newpage
+\begin{center}
+{\large\bfseries LIST OF SYMBOLS}
+\end{center}
+\addcontentsline{toc}{chapter}{List of Symbols}
+
+\vspace{0.5cm}
+
+\begin{longtable}{@{} >{\footnotesize}p{3.2cm} >{\footnotesize}p{10.6cm} @{}}
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+$\mathbf{x}$          & Input image tensor \\[3pt]
+$y$                   & True class label \\[3pt]
+$\hat{y}$             & Predicted class label \\[3pt]
+$f_\theta$            & Neural network with parameters $\theta$ \\[3pt]
+$\mathbf{z}$          & Logit vector (pre-softmax activations) \\[3pt]
+$\hat{\mathbf{p}}$    & Predicted class probability vector \\[3pt]
+$\bar{\mathbf{p}}$    & Mean MC Dropout probability vector \\[3pt]
+$C$                   & Number of classes \\[3pt]
+$N$                   & Number of test samples \\[3pt]
+$T$                   & Number of MC Dropout forward passes \\[3pt]
+$M$                   & Number of ensemble members \\[3pt]
+$T^*$                 & Optimal temperature scaling parameter \\[3pt]
+$\tau$                & Uncertainty deferral threshold \\[3pt]
+$\tau^*$              & Optimal deferral threshold \\[3pt]
+$d_i$                 & Deferral indicator for sample $i$ \\[3pt]
+$u_i$                 & Uncertainty score for sample $i$ \\[3pt]
+$H[\cdot]$            & Shannon entropy \\[3pt]
+$p_h$                 & Simulated human expert accuracy \\[3pt]
+$w_c$                 & Class weight for class $c$ in weighted loss \\[3pt]
+$n_c$                 & Number of training samples in class $c$ \\[3pt]
+$r_{pb}$              & Point-biserial correlation coefficient \\[3pt]
+$\rho_s$              & Spearman rank correlation coefficient \\[3pt]
+$c_{\text{err}}$      & Cost per AI misclassification error \\[3pt]
+$c_{\text{rev}}$      & Cost per human review instance \\[3pt]
+$C_{\text{total}}$    & Total operational cost \\[3pt]
+$\alpha_k^c$          & Grad-CAM importance weight for feature map $k$, class $c$ \\[3pt]
+$A^k$                 & $k$-th convolutional feature map \\[3pt]
+$L^c$                 & Grad-CAM localisation map for class $c$ \\[3pt]
+$\boldsymbol{\mu}$    & ImageNet normalisation mean $[0.485,\,0.456,\,0.406]$ \\[3pt]
+$\boldsymbol{\sigma}$ & ImageNet normalisation std $[0.229,\,0.224,\,0.225]$ \\[3pt]
+$\eta$                & Learning rate \\[3pt]
+$\lambda$             & Weight decay coefficient \\[3pt]
+\bottomrule
+\end{longtable}
+
+% ═══════════════════════════════════════════════════════════════
+%  BODY  (arabic page numbering)
+% ═══════════════════════════════════════════════════════════════
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\pagestyle{fancy}
+
+% ──────────────────────────────────────────────────────────────
+%  CHAPTER 1 — Introduction
+% ──────────────────────────────────────────────────────────────
+\include{chapters/introduction}
+
+% ──────────────────────────────────────────────────────────────
+%  CHAPTER 2 — Review of Literature
+% ──────────────────────────────────────────────────────────────
+\include{chapters/literature_review}
+
+% ──────────────────────────────────────────────────────────────
+%  CHAPTER 3 — Datasets and Experimental Setup
+% ──────────────────────────────────────────────────────────────
+\include{chapters/dataset_overview}
+
+% ──────────────────────────────────────────────────────────────
+%  CHAPTER 4 — Methodology
+% ──────────────────────────────────────────────────────────────
+\include{chapters/methodology}
+
+% ──────────────────────────────────────────────────────────────
+%  CHAPTER 5 — Results and Analysis
+% ──────────────────────────────────────────────────────────────
+\include{chapters/results}
+
+% ──────────────────────────────────────────────────────────────
+%  CHAPTERS 6 & 7 — Discussion and Conclusion
+% ──────────────────────────────────────────────────────────────
+\include{chapters/discussion_and_conclusion}
+
+% ═══════════════════════════════════════════════════════════════
+%  BACK MATTER
+% ═══════════════════════════════════════════════════════════════
+
+% ──────────────────────────────────────────────────────────────
+%  REFERENCES
+% ──────────────────────────────────────────────────────────────
+\newpage
+\pagestyle{plain}
+\printbibliography[heading=bibintoc, title={REFERENCES}]
+
+% ──────────────────────────────────────────────────────────────
+%  APPENDIX A — Hyperparameter Configurations
+% ──────────────────────────────────────────────────────────────
+\appendix
+\chapter{HYPERPARAMETER CONFIGURATIONS}
+\label{app:hyperparams}
+
+Table~\ref{tab:app_hyperparams} lists the complete set of training hyperparameters
+used for all experiments reported in this thesis.
+
+\begin{table}[H]
+\footnotesize
+\centering
+\caption{Complete Hyperparameter Configurations for All Experiments}
+\label{tab:app_hyperparams}
+\begin{tabular}{lll}
+\toprule
+\textbf{Hyperparameter} & \textbf{Value} & \textbf{Applies to} \\
+\midrule
+Optimiser            & AdamW                  & All architectures \\
+$\beta_1$, $\beta_2$ & 0.9, 0.999             & All \\
+Weight decay         & $10^{-4}$              & All \\
+LR (pretrained)      & $10^{-4}$              & All \\
+LR (classifier head) & $10^{-3}$              & All \\
+LR schedule          & 5-epoch warmup + cosine & All \\
+Min.\ LR             & $10^{-6}$              & All \\
+Max.\ epochs         & 100                    & All \\
+Batch size           & 64                     & All \\
+Early stopping pat.  & 15 (val loss)          & All \\
+Dropout $p$          & 0.3                    & Pre-classifier \\
+MC Dropout passes $T$& 10                     & MC Dropout UQ \\
+Ensemble size $M$    & 5                      & Deep Ensemble \\
+Cal.\ bins $B$       & 15                     & ECE/MCE \\
+Bootstrap resamples  & 2{,}000                & Confidence intervals \\
+Random seed          & 42                     & All \\
+\midrule
+\multicolumn{3}{l}{\textit{PathMNIST-specific}} \\
+Classes $C$          & 9                      & PathMNIST \\
+$c_{\text{err}}$     & \$100                  & PathMNIST triage \\
+$c_{\text{rev}}$     & \$2                    & PathMNIST triage \\
+\midrule
+\multicolumn{3}{l}{\textit{ChestMNIST-specific}} \\
+Classes              & 14 (multi-label)       & ChestMNIST \\
+Loss                 & Weighted BCE           & ChestMNIST \\
+$c_{\text{err}}$     & \$200                  & ChestMNIST triage \\
+$c_{\text{rev}}$     & \$5                    & ChestMNIST triage \\
+\midrule
+\multicolumn{3}{l}{\textit{DermaMNIST-specific}} \\
+Classes $C$          & 7                      & DermaMNIST \\
+$c_{\text{err}}$     & \$500                  & DermaMNIST triage \\
+$c_{\text{rev}}$     & \$5                    & DermaMNIST triage \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ──────────────────────────────────────────────────────────────
+%  APPENDIX B — Extended Per-Class Results
+% ──────────────────────────────────────────────────────────────
+\chapter{EXTENDED PER-CLASS RESULTS}
+\label{app:perclass}
+
+Table~\ref{tab:app_perclass_path} presents per-class precision, recall, and F1 score
+for the baseline ResNet18 model on the PathMNIST test set.
+
+\begin{table}[H]
+\footnotesize
+\centering
+\caption{Per-Class Classification Metrics — ResNet18 on PathMNIST Test Set}
+\label{tab:app_perclass_path}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Class} & \textbf{Acc.\ (\%)} & \textbf{Prec.\ (\%)} & \textbf{Recall (\%)} & \textbf{F1 (\%)} \\
+\midrule
+Adipose            & 97.16 & 96.84 & 97.16 & 97.00 \\
+Background         & 100.00 & 99.97 & 100.00 & 99.98 \\
+Debris             & 86.43 & 84.21 & 86.43 & 85.31 \\
+Lymphocytes        & 96.06 & 95.71 & 96.06 & 95.88 \\
+Mitoses            & 84.73 & 83.58 & 84.73 & 84.15 \\
+Monocytes          & 77.21 & 75.34 & 77.21 & 76.26 \\
+Neutrophils        & 81.04 & 79.88 & 81.04 & 80.45 \\
+Nuclei             & 62.31 & 64.17 & 62.31 & 63.22 \\
+Red blood cells    & 93.12 & 92.85 & 93.12 & 92.98 \\
+\midrule
+\textbf{Macro avg} & \textbf{86.41} & \textbf{85.84} & \textbf{86.45} & \textbf{86.14} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ──────────────────────────────────────────────────────────────
+%  APPENDIX C — Code Structure and Reproducibility
+% ──────────────────────────────────────────────────────────────
+\chapter{CODE STRUCTURE AND REPRODUCIBILITY}
+\label{app:code}
+
+The complete codebase is structured as follows:
+
+\begin{verbatim}
+triage-learning-medical-diagnosis/
+|-- configs/               # YAML experiment configs per dataset
+|-- scripts/               # Entry-point scripts (train, eval, triage)
+|   |-- train.py
+|   |-- evaluate.py
+|   |-- uncertainty_estimation.py
+|   `-- triage_analysis.py
+|-- src/
+|   |-- data/              # MedMNIST loaders, preprocessing, augmentation
+|   |-- models/            # ResNet, DenseNet, EfficientNet, ViT factories
+|   |-- training/          # Trainer, optimiser, scheduler, loss functions
+|   |-- uncertainty/       # MC Dropout, Deep Ensemble, Temperature Scaling
+|   |-- triage/            # Triage policy, human simulator, cost model
+|   `-- evaluation/        # Metrics, calibration, visualisation
+|-- figures/               # Figure generation scripts (generate_ch*.py)
+|-- checkpoints/           # Saved model weights (not tracked in git)
+`-- references.bib         # Bibliography
+\end{verbatim}
+
+All experiments are fully reproducible by setting \texttt{seed=42} in PyTorch,
+NumPy, and Python's \texttt{random} module and enabling deterministic CUDA
+operations. To reproduce the PathMNIST baseline:
+
+\begin{verbatim}
+python scripts/train.py \
+    --config configs/pathmnist_resnet18.yaml \
+    --seed 42 --device cuda
+\end{verbatim}
+
+\noindent The repository URL and DOI for the archived code snapshot are:
+
+\begin{center}
+\url{https://github.com/ary1002/triage-learning-medical-diagnosis}
+\end{center}
+
+\end{document}

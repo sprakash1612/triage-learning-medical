@@ -1,0 +1,383 @@
+# Comprehensive Training Configuration Template
+# Multiple experiment presets and hyperparameter search ranges
+
+project:
+  name: "triage-learning"
+  description: "Human-AI Collaboration in Medical Diagnosis"
+  version: "0.1.0"
+
+# Multiple experiment configurations
+experiments:
+  baseline_resnet:
+    description: "Baseline ResNet50 on PathMNIST"
+    architecture: "resnet"
+    variant: "resnet50"
+    dataset: "pathmnist"
+    pretrained: true
+    batch_size: 64
+    learning_rate: 0.001
+    max_epochs: 50
+  
+  efficient_b0:
+    description: "Lightweight EfficientNet B0"
+    architecture: "efficientnet"
+    variant: "b0"
+    dataset: "pathmnist"
+    pretrained: true
+    batch_size: 128
+    learning_rate: 0.001
+    max_epochs: 50
+  
+  chest_xray:
+    description: "EfficientNet for chest X-rays"
+    architecture: "efficientnet"
+    variant: "b3"
+    dataset: "chestmnist"
+    pretrained: true
+    batch_size: 64
+    learning_rate: 0.001
+    max_epochs: 100
+  
+  skin_lesion:
+    description: "Vision Transformer for dermatology"
+    architecture: "vit"
+    variant: "vit_base"
+    dataset: "dermamnist"
+    pretrained: true
+    batch_size: 32
+    learning_rate: 0.0005
+    max_epochs: 150
+  
+  ensemble_model:
+    description: "Deep ensemble for robustness"
+    architecture: "ensemble"
+    base_architecture: "efficientnet"
+    variant: "b3"
+    num_models: 5
+    dataset: "pathmnist"
+    batch_size: 64
+    learning_rate: 0.001
+    max_epochs: 50
+
+# Quick training preset (debugging, testing)
+quick_preset:
+  description: "Fast training for testing"
+  training:
+    max_epochs: 5
+    batch_size: 128
+    learning_rate: 0.001
+    num_workers: 2
+  model:
+    architecture: "resnet"
+    variant: "resnet18"
+    pretrained: true
+  augmentation:
+    level: "light"
+  uncertainty:
+    mc_dropout:
+      num_samples: 5
+    temperature_scaling:
+      max_iters: 10
+  checkpoint:
+    save_every_n_epochs: 1
+
+# Standard training preset (production)
+standard_preset:
+  description: "Standard training configuration"
+  training:
+    max_epochs: 100
+    batch_size: 64
+    learning_rate: 0.001
+    num_workers: 4
+    weight_decay: 1e-4
+  model:
+    architecture: "efficientnet"
+    variant: "b3"
+    pretrained: true
+    dropout_rate: 0.3
+  augmentation:
+    level: "standard"
+  optimizer:
+    name: "adamw"
+    warmup_epochs: 5
+  scheduler:
+    name: "cosine"
+    warmup_type: "linear"
+  loss:
+    name: "focal_loss"
+    gamma: 2.0
+  early_stopping:
+    patience: 15
+    min_delta: 1e-4
+  uncertainty:
+    mc_dropout:
+      num_samples: 10
+      dropout_rate: 0.3
+    temperature_scaling:
+      max_iters: 100
+  checkpoint:
+    save_every_n_epochs: 5
+
+# Extensive training preset (maximum performance)
+extensive_preset:
+  description: "Extensive training for best performance"
+  training:
+    max_epochs: 200
+    batch_size: 32
+    learning_rate: 0.0005
+    num_workers: 8
+    weight_decay: 1e-5
+    gradient_accumulation_steps: 2
+  model:
+    architecture: "vit"
+    variant: "vit_base"
+    pretrained: true
+    dropout_rate: 0.2
+  augmentation:
+    level: "aggressive"
+  optimizer:
+    name: "adamw"
+    warmup_epochs: 10
+  scheduler:
+    name: "cosine"
+    warmup_type: "cosine"
+    T_max: 200
+  loss:
+    name: "symmetric_cross_entropy"
+  early_stopping:
+    patience: 20
+    min_delta: 1e-5
+  uncertainty:
+    mc_dropout:
+      num_samples: 20
+      dropout_rate: 0.2
+    deep_ensemble:
+      num_models: 5
+    temperature_scaling:
+      max_iters: 500
+  checkpoint:
+    save_every_n_epochs: 2
+
+# Hyperparameter search ranges
+hyperparameter_ranges:
+  
+  learning_rates:
+    - 0.00001
+    - 0.00005
+    - 0.0001
+    - 0.0005
+    - 0.001
+    - 0.005
+    - 0.01
+  
+  batch_sizes:
+    - 16
+    - 32
+    - 64
+    - 128
+    - 256
+  
+  weight_decays:
+    - 0.0
+    - 1e-5
+    - 1e-4
+    - 1e-3
+    - 0.01
+  
+  dropout_rates:
+    - 0.0
+    - 0.1
+    - 0.2
+    - 0.3
+    - 0.4
+    - 0.5
+  
+  optimizers:
+    - "adam"
+    - "adamw"
+    - "sgd"
+    - "radam"
+  
+  schedulers:
+    - "cosine"
+    - "step"
+    - "exponential"
+    - "polynomial"
+  
+  loss_functions:
+    - "cross_entropy"
+    - "focal_loss"
+    - "label_smoothing"
+    - "symmetric_cross_entropy"
+  
+  augmentation_levels:
+    - "light"
+    - "standard"
+    - "aggressive"
+
+# Transfer learning strategies
+transfer_learning_strategies:
+  
+  frozen_backbone:
+    description: "Freeze backbone, train only classifier head"
+    freeze_backbone: true
+    learning_rate: 0.01
+    warmup_epochs: 0
+    max_epochs: 50
+    batch_size: 128
+  
+  layer_wise_decay:
+    description: "Decreasing LR from early to late layers"
+    freeze_backbone: false
+    layer_wise_lr_decay: 0.9
+    base_learning_rate: 0.001
+    warmup_epochs: 5
+    max_epochs: 100
+  
+  fine_tuning:
+    description: "Fine-tune entire network with small LR"
+    freeze_backbone: false
+    learning_rate: 0.0001
+    warmup_epochs: 10
+    max_epochs: 100
+  
+  progressive_unfreezing:
+    description: "Gradually unfreeze layers"
+    progressive: true
+    unfreeze_epochs: [20, 40, 60]
+    max_epochs: 100
+
+# Advanced training techniques
+advanced_techniques:
+  
+  mixup:
+    enable: false
+    alpha: 1.0
+    prob: 0.5
+  
+  cutmix:
+    enable: false
+    alpha: 1.0
+    prob: 0.5
+  
+  label_smoothing:
+    enable: true
+    smoothing: 0.1
+  
+  cutout:
+    enable: false
+    num_holes: 8
+    hole_size: 8
+  
+  sam_optimizer:
+    enable: false
+    rho: 0.05
+    adaptive: true
+  
+  stochastic_depth:
+    enable: false
+    drop_path_rate: 0.2
+  
+  mixed_precision:
+    enable: true
+    opt_level: "O1"
+
+# Data sampling strategies
+sampling_strategies:
+  
+  balanced:
+    description: "Balance classes during sampling"
+    strategy: "balanced"
+    oversample_minority: true
+  
+  weighted:
+    description: "Weight samples inversely by class frequency"
+    strategy: "weighted"
+    adaptive: true
+  
+  oversampling:
+    description: "Oversample minority classes"
+    strategy: "oversampling"
+    target_ratio: 0.5
+  
+  undersampling:
+    description: "Undersample majority classes"
+    strategy: "undersampling"
+    target_ratio: 0.5
+
+# Validation and testing strategies
+validation_strategies:
+  
+  holdout:
+    description: "Standard train/val/test split"
+    train_ratio: 0.7
+    val_ratio: 0.15
+    test_ratio: 0.15
+  
+  stratified:
+    description: "Stratified split maintaining class distribution"
+    train_ratio: 0.7
+    val_ratio: 0.15
+    test_ratio: 0.15
+    stratified: true
+  
+  k_fold:
+    description: "K-fold cross-validation"
+    n_splits: 5
+    stratified: true
+    shuffle: true
+
+# Monitoring and logging
+monitoring:
+  
+  metrics:
+    - "loss"
+    - "accuracy"
+    - "balanced_accuracy"
+    - "f1_score"
+    - "auc_roc"
+    - "auc_pr"
+  
+  validation_frequency: 1        # Validate every N epochs
+  log_frequency: 100              # Log every N batches
+  
+  callbacks:
+    - "early_stopping"
+    - "checkpoint"
+    - "learning_rate_monitor"
+    - "gradient_norm_monitor"
+  
+  tensorboard:
+    enable: true
+    log_histogram: true
+    log_gradients: true
+  
+  wandb:
+    enable: false
+    project: "triage-learning"
+    entity: "your-entity"
+
+# Reproducibility settings
+reproducibility:
+  seed: 42
+  deterministic: true
+  cudnn_deterministic: true
+  cudnn_benchmark: false
+  python_hash_seed: 0
+
+# System settings
+system:
+  device: "cuda"
+  distributed: false
+  num_gpus: 1
+  mixed_precision: "O1"
+  gradient_checkpointing: false
+  pin_memory: true
+
+# Output paths
+output:
+  checkpoint_dir: "./experiments"
+  log_dir: "./logs"
+  results_dir: "./results"
+  config_save: true             # Save config with results
+  code_snapshot: true           # Save code snapshot

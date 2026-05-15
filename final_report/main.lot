@@ -1,0 +1,30 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Summary of MedMNIST Datasets Used in This Work}}{18}{table.caption.1}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces PathMNIST Class Definitions and Training Set Distribution}}{20}{table.caption.3}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces ChestMNIST Disease Labels and Training Set Prevalence}}{21}{table.caption.4}%
+\contentsline {table}{\numberline {3.4}{\ignorespaces DermaMNIST Class Definitions and Training Set Distribution}}{22}{table.caption.5}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces Training Hyperparameters Applied to All Architectures}}{29}{table.caption.7}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Cost Model Parameters by Dataset}}{34}{table.caption.8}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Baseline ResNet18 Performance on PathMNIST Test Set ($N = 7{,}180$)}}{37}{table.caption.9}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces Architecture Comparison on PathMNIST Test Set}}{38}{table.caption.11}%
+\contentsline {table}{\numberline {5.3}{\ignorespaces MC Dropout Uncertainty Distribution Statistics — PathMNIST Test Set}}{39}{table.caption.13}%
+\contentsline {table}{\numberline {5.4}{\ignorespaces Uncertainty-Error Correlation Analysis — PathMNIST}}{40}{table.caption.14}%
+\contentsline {table}{\numberline {5.5}{\ignorespaces MC Dropout vs. Deep Ensemble — PathMNIST Test Set}}{41}{table.caption.16}%
+\contentsline {table}{\numberline {5.6}{\ignorespaces Calibration Metrics Before and After Temperature Scaling — PathMNIST (ResNet18)}}{42}{table.caption.18}%
+\contentsline {table}{\numberline {5.7}{\ignorespaces Optimal Triage Threshold Configurations — PathMNIST (ResNet18, $p_h = 0.95$)}}{43}{table.caption.20}%
+\contentsline {table}{\numberline {5.8}{\ignorespaces System Performance Across Human Accuracy Levels ($\tau = 0.4916$, PathMNIST)}}{44}{table.caption.22}%
+\contentsline {table}{\numberline {5.9}{\ignorespaces Cross-Dataset Triage Performance ($p_h = 0.95$)}}{45}{table.caption.24}%
+\contentsline {table}{\numberline {5.10}{\ignorespaces Accuracy and Uncertainty Under Additive Gaussian Noise — PathMNIST (ResNet18)}}{47}{table.caption.26}%
+\contentsline {table}{\numberline {5.11}{\ignorespaces 95\% Bootstrap Confidence Intervals for Key Accuracy Comparisons}}{48}{table.caption.28}%
+\contentsline {table}{\numberline {5.12}{\ignorespaces Pairwise McNemar's Test Results for Architecture Comparisons (Bonferroni-corrected $\alpha = 0.0083$)}}{48}{table.caption.29}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {A.1}{\ignorespaces Complete Hyperparameter Configurations for All Experiments}}{67}{table.caption.31}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {B.1}{\ignorespaces Per-Class Classification Metrics — ResNet18 on PathMNIST Test Set}}{68}{table.caption.32}%
+\addvspace {10\p@ }

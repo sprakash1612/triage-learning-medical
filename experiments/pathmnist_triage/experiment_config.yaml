@@ -1,0 +1,168 @@
+project:
+  name: triage-learning-medical-diagnosis
+  description: Human-AI Collaboration in Medical Diagnosis
+  author: Your Name
+  version: 0.1.0
+experiment:
+  name: pathmnist_triage_exp
+  tags:
+  - baseline
+  - resnet18
+  - pathmnist
+  notes: Initial baseline experiment
+paths:
+  data_dir: /kaggle/working/triage-learning/experiments/pathmnist_triage/data
+  output_dir: /kaggle/working/triage-learning/results/pathmnist_experiments
+  checkpoint_dir: /kaggle/working/triage-learning/experiments/pathmnist_triage/checkpoints
+  log_dir: /kaggle/working/triage-learning/experiments/pathmnist_triage/logs
+dataset:
+  name: pathmnist
+  data_flag: pathmnist
+  download: true
+  size: 28
+  num_classes: 9
+  input_channels: 3
+  as_rgb: true
+  task: multi-class
+data_split:
+  train_ratio: 0.8
+  val_ratio: 0.1
+  test_ratio: 0.1
+  random_seed: 42
+  stratified: true
+augmentation:
+  train:
+    enable: true
+    random_horizontal_flip: 0.5
+    random_vertical_flip: 0.5
+    random_rotation: 45
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+      hue: 0.1
+    gaussian_blur: 0.1
+    gaussian_noise: 0.05
+    normalize:
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  test:
+    enable: true
+    normalize:
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  val:
+    enable: true
+    normalize:
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+model:
+  name: resnet18
+  pretrained: true
+  dropout_rate: 0.3
+  num_classes: 9
+  freeze_backbone: false
+  freeze_layers: 0
+training:
+  batch_size: 128
+  num_epochs: 50
+  num_workers: 2
+  pin_memory: true
+  optimizer:
+    type: adamw
+    lr: 0.001
+    weight_decay: 0.0001
+    betas:
+    - 0.9
+    - 0.999
+    momentum: 0.9
+  scheduler:
+    type: cosine
+    T_max: 50
+    eta_min: 1.0e-06
+    step_size: 10
+    gamma: 0.1
+    patience: 10
+  loss:
+    type: cross_entropy
+    label_smoothing: 0.1
+    class_weights: null
+  early_stopping:
+    enable: true
+    patience: 10
+    min_delta: 0.001
+    monitor: val_accuracy
+    mode: max
+    restore_best_weights: true
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  gradient:
+    max_norm: 1.0
+    accumulation_steps: 1
+uncertainty:
+  method: mc_dropout
+  mc_dropout:
+    num_samples: 30
+    dropout_rate: 0.5
+  deep_ensemble:
+    num_models: 5
+  temperature_scaling:
+    enable: true
+triage:
+  policy: threshold
+  threshold:
+    uncertainty_metric: entropy
+    initial_threshold: 0.5
+    optimization: true
+  deferral:
+    human_accuracy: 0.95
+    human_error_distribution: confidence_based
+evaluation:
+  metrics:
+  - accuracy
+  - precision
+  - recall
+  - f1_score
+  - auroc
+  - auprc
+  calibration:
+    bins: 15
+    compute_ece: true
+    compute_mce: true
+  triage_metrics:
+  - automation_rate
+  - deferred_accuracy
+  - system_accuracy
+  - performance_gain
+reproducibility:
+  seed: 42
+  deterministic: true
+  benchmark: false
+logging:
+  log_interval: 10
+  use_wandb: true
+  use_tensorboard: true
+  save_frequency: 5
+  save_best_only: true
+device:
+  type: cuda
+  gpu_ids:
+  - 0

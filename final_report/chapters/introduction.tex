@@ -1,0 +1,105 @@
+% ============================================================
+% CHAPTER 1 — INTRODUCTION
+% Final M.Tech Thesis: Uncertainty-Aware Triage Learning for
+% Medical Image Diagnosis: A Human-AI Collaborative Framework
+% ============================================================
+
+\chapter{INTRODUCTION}
+
+\section{Background and Motivation}
+
+The integration of artificial intelligence into clinical medicine represents one of the most consequential technological transitions in modern healthcare. Deep learning models trained on large annotated datasets have demonstrated diagnostic accuracy comparable to, and in some domains exceeding, trained specialists across tasks ranging from diabetic retinopathy screening~\cite{gulshan2016development} to histopathological cancer detection~\cite{esteva2017dermatologist}. Yet despite a decade of impressive benchmark results, clinical adoption of AI-driven diagnostic tools remains limited. A fundamental barrier is not one of accuracy, but of trust: standalone AI systems cannot communicate when they are uncertain, cannot acknowledge the limits of their own competence, and cannot integrate gracefully with human clinical workflows.
+
+Diagnostic error in medicine is a persistent and costly problem. Studies estimate that 5--15\% of patient encounters involve some form of diagnostic inaccuracy, contributing to an estimated 40,000--80,000 deaths annually in the United States alone~\cite{leape1994error}. In pathology and radiology, where visual interpretation of complex images is central, error rates of 2--5\% under routine workload conditions have been documented even among experienced specialists~\cite{raab2005clinical}. Cognitive fatigue, high case volumes, and rare class presentations compound these risks. Automated systems that handle routine, clearly-defined cases accurately—while escalating ambiguous, edge-case samples to human review—present a compelling alternative to both fully manual and fully automated paradigms.
+
+The concept of \textit{triage learning}, or learning to defer, formalises this intuition. Rather than requiring a model to produce a final prediction for every input, a triage system partitions cases into those the model handles confidently and those referred to a human expert, with the allocation governed by a principled measure of predictive uncertainty. The combined human-AI system can achieve accuracy well above either component operating independently, provided the uncertainty signal is reliable and the deferral threshold is optimised appropriately.
+
+Uncertainty quantification (UQ) is therefore a prerequisite for effective triage. A model that cannot distinguish its own confident correct predictions from its confident errors provides no useful signal for routing decisions. Monte Carlo (MC) Dropout~\cite{gal2016dropout}, Deep Ensembles~\cite{lakshminarayanan2017simple}, and post-hoc calibration methods such as temperature scaling~\cite{guo2017calibration} collectively provide a toolkit for eliciting and refining probabilistic uncertainty estimates from neural networks. These methods differ in computational cost, theoretical grounding, and empirical reliability, motivating systematic comparison within a unified experimental framework.
+
+Model interpretability presents a complementary concern. Even when an AI system achieves high accuracy, clinicians need explanations of which visual features drive predictions in order to identify systematic failure modes, build appropriate trust, and satisfy regulatory requirements. Gradient-weighted Class Activation Mapping (Grad-CAM)~\cite{selvaraju2017grad} provides spatially-resolved saliency maps that localise discriminative regions within input images, enabling qualitative assessment of whether model reasoning aligns with known pathological features.
+
+This thesis addresses these interrelated challenges—uncertainty quantification, triage policy design, calibration, interpretability, and cross-dataset generalisation—within a single cohesive experimental framework applied to medical image classification. The work proceeds from a validated baseline on histopathology tissue classification to a comprehensive multi-dataset, multi-architecture, multi-UQ-method evaluation that systematically characterises where and why human-AI collaboration improves upon standalone AI.
+
+\section{Problem Statement}
+
+Consider a clinical AI system deployed to classify medical images into diagnostic categories. The system processes a stream of incoming cases and must decide, for each case, whether to (a) issue an automated prediction with high confidence, or (b) defer the case to a human clinician for expert review. The central challenge admits three inter-related sub-problems:
+
+\begin{enumerate}
+    \item \textbf{Uncertainty estimation:} Given a trained classifier $f_\theta$ and input image $x$, compute a scalar uncertainty score $u(x) \in \mathbb{R}_{\geq 0}$ such that cases where $f_\theta$ is likely to err receive high $u(x)$ and cases where $f_\theta$ is reliable receive low $u(x)$.
+
+    \item \textbf{Threshold optimisation:} Given an uncertainty-to-error correlation, identify the deferral threshold $\tau^*$ that maximises a combined objective incorporating system accuracy, automation rate, and operational cost.
+
+    \item \textbf{Calibration and reliability:} Ensure that predicted class probabilities are well-calibrated—i.e., that a predicted probability of 0.9 corresponds to approximately 90\% empirical accuracy—so that uncertainty scores derived from model outputs are meaningful rather than artefactual.
+\end{enumerate}
+
+These three sub-problems interact: a poorly calibrated model may produce unreliable uncertainty scores, leading to a suboptimal triage boundary even after threshold sweep. Improving calibration through temperature scaling alters the uncertainty distribution and shifts the optimal threshold. Switching from MC Dropout to Deep Ensembles changes both the accuracy of the base model and the quality of uncertainty estimation, requiring joint evaluation.
+
+The evaluation context introduces further constraints: medical datasets exhibit severe class imbalance, images may be low-resolution (28$\times$28 pixels in the MedMNIST benchmark), task types vary from single-label multi-class classification to multi-label binary classification, and generalisation across imaging modalities (histopathology, chest radiography, dermatoscopy) cannot be assumed.
+
+\section{Objectives}
+
+The specific objectives of this research are as follows:
+
+\begin{enumerate}
+    \item Train and evaluate baseline deep learning classifiers—ResNet18, DenseNet121, EfficientNet-B3, and Vision Transformer (ViT-Small)—on the PathMNIST histopathology dataset and compare their classification accuracy, calibration error, and training efficiency.
+
+    \item Implement Monte Carlo Dropout uncertainty estimation and quantify the correlation between model uncertainty and prediction errors, validating uncertainty as a viable signal for triage decisions.
+
+    \item Design and evaluate a threshold-based deferral triage system on PathMNIST, identifying optimal thresholds under accuracy-maximising and cost-minimising objectives, and characterising system performance under varying human reviewer accuracy assumptions.
+
+    \item Improve probability calibration using temperature scaling and assess its impact on Expected Calibration Error (ECE), reliability diagrams, and triage system performance.
+
+    \item Compare MC Dropout against Deep Ensembles for uncertainty quality, examining whether ensemble diversity provides superior uncertainty-error correlation and triage benefit.
+
+    \item Extend the triage framework to ChestMNIST (chest X-ray multi-label classification) and DermaMNIST (dermatoscopy multi-class classification) to assess cross-dataset and cross-modality generalisation.
+
+    \item Generate Grad-CAM visualisations for representative correctly classified and misclassified samples to interpret model attention and identify failure modes.
+
+    \item Conduct robustness analysis under additive Gaussian noise and mild distribution shift to characterise how uncertainty scores respond to out-of-distribution inputs.
+
+    \item Perform statistical validation of performance comparisons using bootstrap confidence intervals and McNemar's test for significance of pairwise accuracy differences.
+\end{enumerate}
+
+\section{Scope and Contributions}
+
+\subsection{Scope}
+
+This work is scoped to image classification tasks within the MedMNIST~\cite{yang2021medmnist} benchmark collection, which provides standardised preprocessing, splits, and evaluation protocols across eleven two-dimensional imaging datasets. Three datasets are studied: PathMNIST (histopathology), ChestMNIST (chest radiography), and DermaMNIST (dermatoscopy). All experiments use the standard 28$\times$28 pixel resolution of MedMNIST; experiments at 224$\times$224 resolution are not included due to computational constraints. Human experts are simulated probabilistically rather than through a prospective user study with clinical participants. While simulation allows systematic sensitivity analysis across a continuous range of human accuracy levels, it does not capture the full complexity of human diagnostic reasoning or human-AI interaction dynamics.
+
+\subsection{Contributions}
+
+The principal contributions of this thesis are:
+
+\begin{enumerate}
+    \item \textbf{End-to-end triage learning framework.} A complete and reproducible methodology spanning model training, Monte Carlo Dropout and Deep Ensemble uncertainty estimation, temperature scaling calibration, threshold optimisation under multiple objectives, and cost-benefit analysis. The framework is modular and directly applicable to new datasets and architectures.
+
+    \item \textbf{Empirical validation of uncertainty-based triage on histopathology.} Demonstrated that MC Dropout uncertainty achieves a point-biserial correlation of 0.498 with prediction errors on PathMNIST, enabling a triage system that improves accuracy from 89.04\% to 97.35\%—a 75.8\% reduction in misdiagnoses—while automating 63.9\% of cases.
+
+    \item \textbf{Comparative evaluation of uncertainty quantification methods.} Systematic comparison of MC Dropout and Deep Ensembles across accuracy, calibration, uncertainty quality, and computational overhead, providing empirical guidance for UQ method selection in resource-constrained clinical deployments.
+
+    \item \textbf{Calibration analysis and temperature scaling study.} Characterisation of baseline model calibration quality via ECE and reliability diagrams, with post-hoc temperature scaling shown to reduce ECE substantially, and analysis of the downstream impact on triage threshold and system accuracy.
+
+    \item \textbf{Multi-dataset generalisation study.} Extension of the triage framework to chest radiography and dermatoscopy datasets, providing evidence that the methodology generalises across imaging modalities, class structures (multi-label vs. multi-class), and disease prevalence patterns.
+
+    \item \textbf{Interpretability analysis via Grad-CAM.} Qualitative assessment of model attention on PathMNIST and DermaMNIST, relating discriminative regions to known histological and dermatological features and identifying cases where saliency diverges from clinical expectation as indicators of systematic error modes.
+
+    \item \textbf{Robustness and statistical validation.} Quantification of triage benefit under additive noise and mild covariate shift, together with bootstrap confidence intervals and significance tests for all reported accuracy comparisons, ensuring that conclusions are statistically defensible.
+\end{enumerate}
+
+\section{Organisation of the Thesis}
+
+The remainder of this thesis is organised as follows.
+
+\textbf{Chapter 2} provides a structured review of the relevant literature, covering deep learning architectures for medical image analysis, uncertainty quantification methods, human-AI collaboration frameworks, model interpretability, and probability calibration. The chapter concludes with a synthesis of research gaps that motivate the present work.
+
+\textbf{Chapter 3} describes the three datasets employed in the study—PathMNIST, ChestMNIST, and DermaMNIST—detailing their provenance, class distributions, known challenges, and the preprocessing and augmentation pipelines applied. Evaluation metrics and the experimental protocol are also defined.
+
+\textbf{Chapter 4} presents the methodology in full, covering all model architectures, the MC Dropout and Deep Ensemble UQ frameworks, temperature scaling calibration, the triage deferral policy, threshold optimisation procedures, the cost modelling framework, and the Grad-CAM interpretability pipeline.
+
+\textbf{Chapter 5} presents all experimental results, organised from baseline model performance through uncertainty analysis, triage optimisation, calibration study, cross-dataset generalisation, interpretability visualisations, and robustness experiments, concluding with statistical validation.
+
+\textbf{Chapter 6} interprets and discusses the results in the context of related work, addresses limitations and failure modes, and considers implications for clinical deployment.
+
+\textbf{Chapter 7} summarises the contributions of the thesis and outlines directions for future research.
+
+\noindent Appendices provide supplementary materials including complete hyperparameter configurations, extended per-class performance tables, and notes on code structure and reproducibility.

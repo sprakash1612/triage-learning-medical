@@ -1,0 +1,233 @@
+# DermaMNIST Configuration
+# Dermatology Image Classification - Skin Lesion Diagnosis (7 classes)
+
+project:
+  name: "triage-learning-derma"
+  description: "Triage System for Dermatology Image Classification"
+  version: "0.1.0"
+
+experiment:
+  name: "dermamnist_vit"
+  tags: ["dermamnist", "vit", "dermatology", "skin-lesion"]
+  notes: "Vision Transformer for multi-class skin lesion classification"
+
+paths:
+  data_dir: "./data"
+  output_dir: "./results/dermamnist"
+  checkpoint_dir: "./experiments/dermamnist"
+  log_dir: "./logs/dermamnist"
+
+# DermaMNIST Dataset (7 skin disease classes)
+dataset:
+  name: "dermamnist"
+  data_flag: "dermamnist"
+  download: true
+  size: 28
+  num_classes: 7
+  input_channels: 3              # RGB dermatology images
+  as_rgb: true
+  class_names:
+    - "Melanoma"                 # High risk
+    - "Melanocytic Nevus"
+    - "Basal Cell Carcinoma"     # High risk
+    - "Actinic Keratosis/Bowen Disease"
+    - "Benign Keratosis"
+    - "Dermatofibroma"
+    - "Vascular Lesion"
+
+data_split:
+  train_ratio: 0.7              # Limited dermatology data
+  val_ratio: 0.15
+  test_ratio: 0.15
+  random_seed: 42
+  stratified: true              # Maintain class balance in splits
+
+# Augmentation for color images with class imbalance
+augmentation:
+  train:
+    enable: true
+    level: "standard"
+    # Dermatology-specific: color preservation important
+    random_horizontal_flip: 0.5
+    random_vertical_flip: 0.5
+    random_rotation: 20
+    color_jitter:
+      brightness: 0.15          # Subtle to preserve color info
+      contrast: 0.15
+      saturation: 0.15
+      hue: 0.05                 # Preserve color channels
+    elastic_deform: 0.15
+    gaussian_blur: 0.1
+    normalize:
+      mean: [0.5, 0.5, 0.5]
+      std: [0.2, 0.2, 0.2]      # Tighter normalization for images
+  val:
+    enable: true
+    normalize:
+      mean: [0.5, 0.5, 0.5]
+      std: [0.2, 0.2, 0.2]
+  test:
+    enable: true
+    normalize:
+      mean: [0.5, 0.5, 0.5]
+      std: [0.2, 0.2, 0.2]
+
+# Model architecture - ViT good for color features
+model:
+  architecture: "vit"
+  variant: "vit_base"
+  pretrained: true
+  num_classes: 7
+  input_channels: 3
+  dropout_rate: 0.25
+  freeze_backbone: false
+
+# Training configuration - handle class imbalance
+training:
+  max_epochs: 150
+  batch_size: 32                # Smaller batches for stability with imbalance
+  num_workers: 4
+  learning_rate: 0.0005         # Lower LR for ViT
+  weight_decay: 1e-4
+  
+  optimizer:
+    name: "adamw"
+    beta1: 0.9
+    beta2: 0.999
+    eps: 1e-8
+  
+  scheduler:
+    name: "cosine"
+    T_max: 150
+    eta_min: 1e-6
+    warmup_epochs: 10            # Longer warmup for ViT
+    warmup_type: "cosine"
+  
+  # Loss function - handle severe class imbalance
+  loss:
+    name: "focal_loss"
+    gamma: 2.5                   # Higher gamma for imbalance
+    alpha: [0.5, 0.3, 0.8, 0.4, 0.2, 0.2, 0.3]  # Class weights
+  
+  early_stopping:
+    enable: true
+    monitor_metric: "val_loss"
+    mode: "min"
+    patience: 20
+    min_delta: 1e-4
+    restore_best_weights: true
+  
+  gradient:
+    max_norm: 2.0                # Higher clipping for stability
+    accumulation_steps: 2        # Gradient accumulation for larger effective batch
+
+# Uncertainty estimation
+uncertainty:
+  enable: true
+  methods:
+    - "mc_dropout"
+    - "deep_ensemble"
+    - "temperature_scaling"
+  mc_dropout:
+    num_samples: 25
+    dropout_rate: 0.25
+  deep_ensemble:
+    num_models: 5                # Multiple models for robustness
+    different_seeds: true
+  temperature_scaling:
+    enable: true
+    method: "sgd"                # SGD more stable for ensembles
+    learning_rate: 0.001
+    max_iters: 1000
+
+# Triage configuration - critical for skin cancer
+triage:
+  enable: true
+  strategies:
+    - "threshold"
+    - "confidence_based"
+    - "cost_sensitive"
+  
+  threshold_strategy:
+    percentile: 80               # More conservative - defer 20%
+  
+  confidence_strategy:
+    min_confidence: 0.7
+  
+  cost_sensitive:
+    ai_error_cost: 500           # Very high cost for skin cancer misdiagnosis
+    human_review_cost: 5
+  
+  human_expert:
+    accuracy: 0.89               # Dermatologists high but not perfect
+    class_specific_accuracy:
+      - 0.98                     # Melanoma - critical, high accuracy
+      - 0.85
+      - 0.96                     # BCC - critical, high accuracy
+      - 0.80
+      - 0.75
+      - 0.72
+      - 0.78
+  
+  # Critical disease classes - skin cancers
+  critical_classes: [0, 2]       # Melanoma, Basal Cell Carcinoma
+
+# Evaluation configuration
+evaluation:
+  metrics:
+    - "accuracy"
+    - "balanced_accuracy"        # Important with class imbalance
+    - "auc_roc"
+    - "auc_pr"
+    - "f1_score_weighted"
+    - "sensitivity"
+    - "specificity"
+    - "confusion_matrix"
+  
+  triage_metrics:
+    - "automation_efficiency"
+    - "workload_reduction"
+    - "safety_metrics"
+    - "cost_benefit_analysis"
+    - "critical_disease_deferral"
+
+# Device configuration
+device:
+  type: "cuda"
+  distributed: false
+  device_id: 0
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  tensorboard: true
+  wandb: false
+
+checkpoint:
+  save_strategy: "best"
+  monitor_metric: "val_f1_score_weighted"
+  mode: "max"
+  save_top_k: 3
+  save_every_n_epochs: 5
+
+seed: 42
+deterministic: true
+
+# Hyperparameter presets for dermatology
+presets:
+  quick:
+    max_epochs: 20
+    batch_size: 64
+    learning_rate: 0.0005
+  
+  standard:
+    max_epochs: 150
+    batch_size: 32
+    learning_rate: 0.0005
+  
+  extensive:
+    max_epochs: 300
+    batch_size: 16
+    learning_rate: 0.00025
+    num_workers: 8
+    gradient_accumulation_steps: 4

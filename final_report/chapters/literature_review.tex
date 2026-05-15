@@ -1,0 +1,147 @@
+% ============================================================
+% CHAPTER 2 — REVIEW OF LITERATURE
+% Final M.Tech Thesis: Uncertainty-Aware Triage Learning for
+% Medical Image Diagnosis: A Human-AI Collaborative Framework
+% ============================================================
+
+\chapter{REVIEW OF LITERATURE}
+
+\section{Deep Learning in Medical Image Analysis}
+
+\subsection{Convolutional Neural Network Architectures}
+
+The modern era of deep learning in medical imaging began with the application of Convolutional Neural Networks (CNNs) to large-scale image recognition. The seminal AlexNet~\cite{krizhevsky2012imagenet} demonstrated that deep convolutional architectures trained on ImageNet could surpass classical feature engineering by a substantial margin. Subsequent architectural innovations aimed at training deeper and more parameter-efficient networks, addressing the twin problems of vanishing gradients and representational bottlenecks.
+
+He et al.~\cite{he2016deep} introduced Residual Networks (ResNets), which resolve the degradation problem in very deep networks by adding shortcut connections that allow gradients to flow directly across layers. A residual block computes $\mathcal{F}(\mathbf{x}) + \mathbf{x}$ where $\mathcal{F}$ represents the residual mapping to be learned. ResNet18 and ResNet50 became standard baselines across medical imaging benchmarks due to their favourable accuracy-to-parameter ratio and well-studied transfer learning behaviour. Huang et al.~\cite{huang2017densely} extended this idea with Dense Convolutional Networks (DenseNets), where each layer receives concatenated feature maps from all preceding layers, enabling feature reuse and reducing the total number of parameters required. DenseNet121 has achieved strong results on chest radiograph classification and histopathology tasks.
+
+Tan and Le~\cite{tan2019efficientnet} proposed a principled compound scaling methodology that jointly scales network width, depth, and input resolution using a fixed set of coefficients. The resulting EfficientNet family achieves state-of-the-art accuracy with substantially fewer parameters than comparable architectures. EfficientNet-B3 and B4 are particularly well-suited to medical imaging tasks where computational budgets are constrained and datasets are moderate in size.
+
+Dosovitskiy et al.~\cite{dosovitskiy2020image} introduced the Vision Transformer (ViT), which abandons convolutions entirely in favour of patch-based self-attention. An image is divided into fixed-size patches, linearly projected into embedding vectors, and processed by a standard Transformer encoder with multi-head self-attention. ViT achieves competitive or superior performance to CNNs when trained on sufficiently large datasets. In the medical imaging domain, where labelled data is often limited, ViT variants pre-trained with self-supervised objectives~\cite{caron2021emerging} have shown promise, though their advantage over CNNs at low resolution (28$\times$28 pixels) remains less established.
+
+\subsection{Transfer Learning and Domain Adaptation}
+
+Transfer learning from large-scale natural image datasets to medical imaging is now standard practice. Raghu et al.~\cite{raghu2019transfusion} conducted a systematic study of transfer learning for medical imaging and found that features from ImageNet pre-training transfer effectively to histopathology and radiology tasks, particularly in lower layers that capture texture and edge statistics. However, they noted that for sufficiently large medical datasets, training from scratch can approach or match transfer learning performance, suggesting the benefit is primarily one of sample efficiency rather than qualitative improvement.
+
+Layer-wise learning rate decay—applying smaller learning rates to earlier layers and larger rates to task-specific classifier heads—has become standard when fine-tuning pre-trained models, preventing destructive forgetting of general features while allowing efficient adaptation to the target domain~\cite{howard2018universal}. Gradual unfreezing, which progressively unfreezes layers from the classifier head backwards, provides a complementary strategy with similar motivation.
+
+\subsection{Medical Imaging Benchmarks and Datasets}
+
+Yang et al.~\cite{yang2021medmnist} introduced the MedMNIST benchmark collection, comprising standardised 28$\times$28 pixel versions of eleven two-dimensional and six three-dimensional medical imaging datasets spanning pathology, radiology, dermatology, ophthalmology, and dental imaging. The benchmark provides fixed train-validation-test splits, evaluation protocols, and baseline results, enabling direct comparison across studies. PathMNIST contains 89,996 histopathology images across nine colorectal cancer tissue classes sourced from Kather et al.~\cite{kather2019predicting}. ChestMNIST is derived from the NIH ChestX-ray14 dataset~\cite{wang2017chestx} with 112,120 frontal-view chest radiographs and 14 binary disease labels. DermaMNIST is sourced from the HAM10000 skin lesion dataset~\cite{tschandl2018ham10000} with 10,015 dermatoscopic images across seven diagnostic categories.
+
+\subsection{Class Imbalance in Medical Datasets}
+
+Severe class imbalance is a pervasive challenge in medical imaging datasets, arising naturally from the rarity of pathological conditions relative to normal tissue. Buda et al.~\cite{buda2018systematic} conducted a systematic study of imbalance mitigation strategies and found that oversampling the minority class at the data level and using cost-sensitive weighting at the loss level both provide substantial benefits, with the optimal strategy dependent on the degree of imbalance. Weighted cross-entropy assigns per-class weight $w_c = n / (C \cdot n_c)$, inversely proportional to class frequency. Lin et al.~\cite{lin2017focal} proposed focal loss, which dynamically down-weights easy, well-classified examples by multiplying cross-entropy by $(1 - p_t)^\gamma$, focusing training on hard minority-class examples.
+
+\subsection{Histopathology and Dermatology Classification}
+
+Esteva et al.~\cite{esteva2017dermatologist} demonstrated that a deep CNN trained on 129,450 clinical images could classify skin cancer at a level of competence comparable to board-certified dermatologists. Campanella et al.~\cite{campanella2019clinical} showed that weakly supervised learning on over a million whole-slide images could achieve clinically actionable performance for prostate cancer detection. In histopathology, Kather et al.~\cite{kather2019predicting} demonstrated that deep learning classifiers could predict microsatellite instability directly from haematoxylin-and-eosin stained tissue images, illustrating the potential for discovery of novel biomarkers beyond the reach of manual pathological assessment.
+
+\section{Uncertainty Quantification in Neural Networks}
+
+\subsection{Bayesian Deep Learning}
+
+Standard neural networks produce point estimates of parameters and, consequently, point estimates of predictions. From a Bayesian perspective, one seeks instead the posterior predictive distribution $p(y \mid \mathbf{x}, \mathcal{D}) = \int p(y \mid \mathbf{x}, \boldsymbol{\theta}) \, p(\boldsymbol{\theta} \mid \mathcal{D}) \, d\boldsymbol{\theta}$, which marginalises over parameter uncertainty given the training data $\mathcal{D}$. Exact Bayesian inference is intractable for modern deep networks due to the high dimensionality of $\boldsymbol{\theta}$. Variational inference approximates the posterior with a tractable distribution $q_\phi(\boldsymbol{\theta})$ by minimising the KL divergence $\text{KL}[q_\phi(\boldsymbol{\theta}) \| p(\boldsymbol{\theta} \mid \mathcal{D})]$, equivalent to maximising the evidence lower bound (ELBO). Blundell et al.~\cite{blundell2015weight} introduced Bayes by Backprop, which learns factorised Gaussian posteriors over weights. While theoretically principled, weight-space variational methods incur a twofold memory and computational overhead.
+
+\subsection{Monte Carlo Dropout}
+
+Gal and Ghahramani~\cite{gal2016dropout} showed that training a neural network with dropout and evaluating it at test time with dropout active is equivalent to performing approximate variational inference in a deep Gaussian process, provided the variational distribution is a mixture of two Gaussians with zero mean. This reinterpretation, termed Monte Carlo (MC) Dropout, provides a computationally lightweight uncertainty estimate: $T$ stochastic forward passes through the network with active dropout yield a set of predictions $\{\hat{\mathbf{p}}_t\}_{t=1}^T$, from which the mean prediction $\bar{\mathbf{p}} = T^{-1}\sum_t \hat{\mathbf{p}}_t$ and predictive entropy $H[\bar{\mathbf{p}}] = -\sum_c \bar{p}_c \log \bar{p}_c$ are computed.
+
+MC Dropout has been applied extensively in medical imaging. Leibig et al.~\cite{leibig2017leveraging} found that MC Dropout uncertainty outperformed conventional confidence measures for diabetic retinopathy detection, achieving AUROCs of 0.82--0.89 for uncertainty-based error prediction. Roy et al.~\cite{roy2019bayesian} demonstrated that MC Dropout uncertainty maps in cardiac MRI segmentation closely correspond to anatomically ambiguous boundaries, providing actionable quality control information. The key limitation of MC Dropout is that the Bayesian interpretation requires dropout rates and architecture choices made originally for regularisation, not posterior approximation, which may produce poorly calibrated uncertainties.
+
+\subsection{Deep Ensembles}
+
+Lakshminarayanan et al.~\cite{lakshminarayanan2017simple} proposed Deep Ensembles as a simple, scalable, and highly effective approach to uncertainty estimation. An ensemble of $M$ independently initialised and trained models produces predictions $\{\hat{\mathbf{p}}^{(m)}\}_{m=1}^M$; uncertainty is captured by the disagreement among ensemble members, typically measured by the entropy of the mean prediction or the average pairwise Jensen-Shannon divergence. Deep ensembles consistently outperform MC Dropout on calibration benchmarks and tend to produce superior uncertainty-error correlations, particularly on out-of-distribution inputs~\cite{ovadia2019can}. Ovadia et al.~\cite{ovadia2019can} showed that ensemble uncertainty is more robust to distribution shift than MC Dropout uncertainty, an important property for medical applications where test distributions may diverge from training distributions due to scanner variability or population differences.
+
+The principal drawback of deep ensembles is computational cost: training $M$ models requires $M$ times the computational budget, and inference requires $M$ forward passes. For $M=5$, the standard ensemble size in the literature, this is typically acceptable for batch processing applications but may constrain deployment in latency-sensitive real-time systems.
+
+\subsection{Other Uncertainty Estimation Methods}
+
+Evidential deep learning~\cite{sensoy2018evidential} places a Dirichlet distribution over the class probability simplex, treating the network as estimating the parameters of an evidential distribution rather than directly outputting class probabilities. This allows direct estimation of epistemic uncertainty (lack of knowledge) and aleatoric uncertainty (irreducible noise) without ensemble or dropout. Spectral normalisation with Gaussian processes~\cite{liu2020simple} regularises neural network features to respect a bi-Lipschitz constraint, ensuring that the output feature space is well-behaved for downstream distance-based uncertainty estimation. Conformal prediction~\cite{angelopoulos2021gentle} provides distribution-free coverage guarantees: given a miscoverage level $\alpha$, the prediction set constructed from a conformal score is guaranteed to contain the true label with probability at least $1-\alpha$, regardless of the underlying data distribution. These methods collectively define the landscape within which MC Dropout and Deep Ensembles should be understood.
+
+\section{Human-AI Collaborative Systems and Learning to Defer}
+
+\subsection{Selective Prediction and Rejection}
+
+The classical selective prediction framework, introduced by Chow~\cite{chow1970optimum}, allows a classifier to abstain on inputs where its confidence falls below a threshold, trading coverage for selective accuracy. Geifman and El-Yaniv~\cite{geifman2017selective} extended this to neural networks, proposing selective classifiers based on softmax response thresholds and demonstrating empirically that competitive accuracy-coverage trade-offs are achievable without modifying training. Selective prediction provides the theoretical foundation for triage systems: the AI system operates as a selective classifier, and deferred cases are handled by a human expert rather than simply rejected.
+
+\subsection{Learning to Defer}
+
+Madras et al.~\cite{madras2018predict} introduced the predict-then-defer framework, in which a model is jointly trained to predict and to defer, with deferral cost depending on the human expert's predicted accuracy for each input. Mozannar and Sontag~\cite{mozannar2020consistent} provided consistent surrogate loss functions for joint optimisation of AI accuracy on automated cases and human accuracy on deferred cases, showing that surrogate-minimising classifiers are consistent with the desired Bayes-optimal deferral policy. Verma and Nalisnick~\cite{verma2022calibrated} showed that calibrated uncertainty scores enable consistent learning to defer without joint training, allowing post-hoc construction of deferral policies from existing trained classifiers. This result is directly relevant to the present work, which employs post-hoc threshold optimisation rather than end-to-end joint training.
+
+Okati et al.~\cite{okati2021differentiable} proposed differentiable triage, which directly minimises a smooth approximation of the system-level error using gradient-based optimisation, enabling more flexible deferral policies that can incorporate budget constraints and variable human expertise. The limitation of joint learning approaches, compared to post-hoc threshold optimisation, is their requirement for human label estimates during training, which are rarely available in standard medical imaging datasets.
+
+\subsection{Human-AI Collaboration in Clinical Settings}
+
+Sendak et al.~\cite{sendak2020human} conducted a qualitative study of ML deployment for mortality prediction in a real emergency department, finding that effective human-AI collaboration required workflow integration, explanation of model behaviour, and active trust calibration. Clinicians who trusted the model blindly performed worse than those who maintained appropriate scepticism. Reyes et al.~\cite{reyes2020interpretability} surveyed the interpretability requirements for clinical AI across six specialties, noting that clinicians' primary concern was not prediction accuracy but understanding why a prediction was made and under what conditions it could be trusted.
+
+Tschandl et al.~\cite{tschandl2020human} demonstrated in a prospective study of dermatology diagnosis that AI assistance improved the diagnostic accuracy of general practitioners by 10 percentage points but did not improve the accuracy of experienced dermatologists, suggesting that triage benefit depends strongly on the relative competency gap between AI and human. Rajpurkar et al.~\cite{rajpurkar2022ai} reviewed the state of AI in medical imaging and concluded that human-AI collaboration, rather than replacement, represented the near-term clinical reality, with AI systems best suited to augmenting human decision-making in high-volume routine tasks. Fernandes et al.~\cite{fernandes2024use} reviewed triage automation in emergency settings, reporting automation rates of 40--80\% depending on acceptable accuracy targets, consistent with the operating range studied in this thesis.
+
+\subsection{Automation Bias and Trust Calibration}
+
+A well-documented failure mode of human-AI collaboration is automation bias: the tendency for humans to over-rely on AI recommendations, reducing critical scrutiny even when the AI is incorrect~\cite{goddard2012automation}. Automation bias is stronger when the human is under time pressure, when the AI recommendation is presented prominently, and when the human has limited domain expertise. In medical imaging, automation bias has been documented in radiological interpretation studies where AI annotations were shown alongside images. Uncertainty communication—explicitly displaying model confidence or flagging low-confidence cases—has been shown to partially counteract automation bias by prompting increased scrutiny on uncertain predictions~\cite{cai2019hello}.
+
+\section{Model Interpretability and Explainability}
+
+\subsection{Gradient-Based Saliency Methods}
+
+Interpretability methods for neural networks can be classified along two axes: global versus local, and gradient-based versus perturbation-based. Local gradient-based methods explain individual predictions by computing the gradient of the output score with respect to the input image, highlighting pixels that most influence the prediction. Simonyan et al.~\cite{simonyan2013deep} proposed the vanilla gradient approach, which computes $\partial S_c / \partial \mathbf{x}$ where $S_c$ is the class score. Guided backpropagation~\cite{springenberg2014striving} modifies the backpropagation pass to zero out negative gradients at ReLU activations, producing sharper and more spatially coherent saliency maps.
+
+Integrated Gradients~\cite{sundararajan2017axiomatic} addresses the saturation problem of vanilla gradients by accumulating gradients along a straight-line path from a baseline input $\mathbf{x}'$ to the actual input $\mathbf{x}$: $\text{IG}_i(\mathbf{x}) = (x_i - x'_i) \int_0^1 \frac{\partial F(\mathbf{x}' + \alpha(\mathbf{x}-\mathbf{x}'))}{\partial x_i} d\alpha$. This approach satisfies desirable axioms including sensitivity and implementation invariance, making it more theoretically principled than vanilla gradient methods.
+
+\subsection{Class Activation Mapping}
+
+Class Activation Mapping (CAM)~\cite{zhou2016learning} computes a spatial map indicating which image regions are most relevant to the predicted class by projecting classification weights back onto the final convolutional feature maps. For a network with global average pooling, the class activation map for class $c$ is $M_c(\mathbf{x}) = \sum_k w_k^c A_k(\mathbf{x})$, where $A_k$ is the $k$-th feature map and $w_k^c$ is the weight connecting feature $k$ to class $c$. CAM is limited to architectures with specific global average pooling structures.
+
+Selvaraju et al.~\cite{selvaraju2017grad} generalised this to arbitrary architectures with Gradient-weighted CAM (Grad-CAM), which uses the gradient of the class score with respect to the feature maps of the target convolutional layer as an importance weighting: $\alpha_k^c = \frac{1}{Z}\sum_i \sum_j \frac{\partial S^c}{\partial A_{ij}^k}$. The resulting localisation map $L^c = \text{ReLU}\left(\sum_k \alpha_k^c A^k\right)$ is upsampled to input resolution and overlaid on the original image. Grad-CAM has been widely adopted in medical imaging as a tool for validating that models attend to clinically relevant regions. Grad-CAM++ \cite{chattopadhay2018grad} extends Grad-CAM by using a weighted combination of the partial derivatives, providing improved localisation of multiple occurrences of the same class within a single image.
+
+\subsection{Applications in Medical Image Interpretability}
+
+Rajpurkar et al.~\cite{rajpurkar2017chexnet} demonstrated Grad-CAM localisation for pneumonia detection on chest radiographs, showing that the network correctly focused on consolidation regions. Esteva et al.~\cite{esteva2017dermatologist} used saliency maps to show that the skin cancer classifier attended to lesion borders and texture features consistent with dermatological diagnostic criteria. However, Rudin~\cite{rudin2019stop} has argued that post-hoc saliency explanations for black-box models can be misleading, as saliency maps reflect the gradient landscape of the learned function rather than the causal reasoning process. Adebayo et al.~\cite{adebayo2018sanity} proposed sanity checks showing that many saliency methods produce similar maps even for randomly initialised or label-randomised networks, raising concerns about whether they measure model behaviour or merely edge-detection in the input image. These critiques motivate the use of Grad-CAM primarily as a qualitative diagnostic tool rather than a definitive explanation.
+
+\subsection{Concept-Based Explanations}
+
+Beyond pixel-level saliency, concept-based explanations aim to provide higher-level, human-interpretable reasons for predictions. Testing with Concept Activation Vectors (TCAV)~\cite{kim2018interpretability} quantifies the degree to which user-defined visual concepts (e.g., ``nuclear enlargement'', ``irregular border'') influence network predictions, by training linear classifiers to detect concept presence in the activation space. In histopathology, concept-based explanations have been shown to align with pathologists' verbal reasoning more closely than pixel saliency maps~\cite{lucieri2022explainability}.
+
+\section{Calibration of Probabilistic Classifiers}
+
+\subsection{Calibration and Overconfidence}
+
+A probabilistic classifier is said to be well-calibrated if the predicted probability of class $c$ matches the empirical frequency of class $c$ occurring across inputs assigned that probability. Formally, $P(\hat{y} = y \mid \hat{p} = p) = p$ for all $p \in [0, 1]$. Guo et al.~\cite{guo2017calibration} demonstrated that modern neural networks are systematically overconfident: despite higher accuracy than their predecessors, post-ReLU deep networks trained with batch normalisation and weight decay exhibit predicted probabilities concentrated near 0 and 1 with empirical accuracy substantially below the predicted probability. This overconfidence is problematic for clinical deployment, where predicted probabilities inform treatment decisions, and for uncertainty-based triage, where inflated confidence reduces the discriminative power of uncertainty scores.
+
+\subsection{Calibration Metrics}
+
+Expected Calibration Error (ECE) partitions predictions into $B$ equally-spaced confidence bins and computes the weighted average of the absolute difference between mean confidence and accuracy within each bin:
+\begin{equation}
+    \text{ECE} = \sum_{b=1}^{B} \frac{|B_b|}{n} \left| \text{acc}(B_b) - \text{conf}(B_b) \right|
+\end{equation}
+where $B_b$ is the set of predictions falling in bin $b$, $\text{acc}(B_b)$ is the fraction correctly classified, and $\text{conf}(B_b)$ is the mean predicted confidence. Maximum Calibration Error (MCE) replaces the weighted average with a maximum over bins, quantifying worst-case miscalibration. Naeini et al.~\cite{naeini2015obtaining} introduced the reliability diagram, which plots $\text{acc}(B_b)$ against $\text{conf}(B_b)$ for each bin; a perfectly calibrated model produces a diagonal line. The Brier score~\cite{brier1950verification} provides a proper scoring rule that simultaneously measures both calibration and sharpness: $\text{BS} = n^{-1}\sum_i \sum_c (\hat{p}_{ic} - y_{ic})^2$.
+
+\subsection{Post-Hoc Calibration Methods}
+
+Platt scaling~\cite{platt1999probabilistic}, originally proposed for support vector machine outputs, applies a sigmoid transformation to logits: $\hat{p} = \sigma(a \cdot f(\mathbf{x}) + b)$, where $a$ and $b$ are learned on a held-out calibration set by minimising negative log-likelihood. Temperature scaling~\cite{guo2017calibration} is a single-parameter special case: $\hat{p}_c = \text{softmax}(z_c / T)$, where $T > 1$ ``softens'' the distribution and reduces overconfidence. Temperature scaling leaves class predictions unchanged and does not affect accuracy; it only modifies confidence magnitudes. Guo et al. found temperature scaling to outperform more complex methods including histogram binning, isotonic regression, and Platt scaling on modern neural networks, attributing this to the single-parameter model's lower variance and better generalisation from limited calibration data.
+
+Dirichlet calibration~\cite{kull2019beyond} generalises temperature scaling to multi-class settings by fitting a full Dirichlet distribution over the probability simplex, allowing class-dependent calibration corrections. Ensemble-based calibration~\cite{lakshminarayanan2017simple} exploits the observation that ensembles of separately trained models are inherently better calibrated than individual models, as the diversity of ensemble members prevents systematic overconfidence on any subset of inputs.
+
+\subsection{Calibration in Medical AI}
+
+Nixon et al.~\cite{nixon2019measuring} proposed measuring calibration with adaptive binning schemes that maintain equal sample sizes per bin, addressing the sensitivity of fixed-width bins to confidence concentration near 1. In the medical imaging domain, poorly calibrated models have been shown to induce suboptimal treatment decisions when used in clinical decision support systems~\cite{jiang2012calibrating}. Calibration degradation under distribution shift—where test inputs differ systematically from training inputs—is a particular concern in medical imaging due to scanner variability, site-specific acquisition protocols, and patient population heterogeneity~\cite{ovadia2019can}.
+
+\section{Summary and Research Gaps}
+
+The reviewed literature collectively establishes several conclusions. First, transfer learning from ImageNet to medical imaging is effective and standard, with ResNet, DenseNet, and EfficientNet variants providing competitive baselines. Vision Transformers offer complementary inductive biases but require more data or self-supervised pre-training to match CNNs in low-resource settings. Second, MC Dropout is the most widely deployed uncertainty quantification method due to its simplicity and minimal computational overhead, but Deep Ensembles consistently provide superior calibration and out-of-distribution uncertainty. Third, triage systems that combine AI predictions with human review can substantially outperform either component alone, and post-hoc threshold optimisation using calibrated uncertainty scores provides a practically viable alternative to joint learning to defer approaches. Fourth, Grad-CAM provides useful qualitative interpretability for convolutional networks, though its reliability as a causal explanation requires validation against clinical ground truth. Fifth, temperature scaling is a simple and effective post-hoc calibration method that systematically reduces overconfidence without affecting accuracy.
+
+The following research gaps motivate the present work:
+
+\begin{enumerate}
+    \item \textbf{End-to-end system integration.} Existing studies typically evaluate one component in isolation—uncertainty estimation, triage policy, or calibration—without assessing interactions between components. For example, the impact of temperature scaling on triage threshold selection and system accuracy has not been systematically studied.
+
+    \item \textbf{Comparative UQ evaluation within a common framework.} Direct comparisons of MC Dropout and Deep Ensembles on the same dataset, with the same base architecture and identical triage framework, are rare. Most comparative studies vary multiple factors simultaneously, making it difficult to attribute performance differences.
+
+    \item \textbf{Multi-dataset generalisation with consistent methodology.} Studies that apply triage frameworks to multiple medical imaging modalities using identical experimental protocols are uncommon, limiting understanding of whether triage benefits are dataset-specific or broadly applicable.
+
+    \item \textbf{Statistical rigour in performance comparisons.} Many studies report point estimates without confidence intervals or significance tests, making it difficult to assess whether reported improvements over baselines are reproducible or attributable to random variation.
+
+    \item \textbf{Robustness of uncertainty under distribution shift.} The behaviour of MC Dropout and ensemble uncertainty under additive noise and mild covariate shift in the medical imaging context has been studied primarily with natural image benchmarks, with limited medical domain evaluation.
+\end{enumerate}
+
+This thesis addresses all five gaps through a comprehensive, reproducible experimental framework applied to three MedMNIST datasets, with controlled comparisons of UQ methods, systematic calibration analysis, and statistical validation of all reported results.

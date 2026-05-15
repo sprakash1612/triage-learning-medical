@@ -1,0 +1,345 @@
+# PathMNIST Configuration
+# Colon Pathology Image Classification (9 tissue types)
+
+project:
+  name: "triage-learning-path"
+  description: "Triage System for Colon Pathology Classification"
+  version: "0.1.0"
+
+experiment:
+  name: "pathmnist_resnet50"
+  tags: ["pathmnist", "resnet", "pathology", "histology"]
+  notes: "ResNet50 for multi-class colon tissue classification"
+
+paths:
+  data_dir: "./data"
+  output_dir: "./results/pathmnist"
+  checkpoint_dir: "./experiments/pathmnist"
+  log_dir: "./logs/pathmnist"
+
+# PathMNIST Dataset (9 colon tissue classes)
+dataset:
+  name: "pathmnist"
+  data_flag: "pathmnist"
+  download: true
+  size: 28                       # Use 28 for quick experiments, 224 for better accuracy
+  num_classes: 9
+  input_channels: 3              # RGB histology images
+  as_rgb: true
+  task: "multi-class"            # Single label per image
+  class_names:
+    - "Adipose"                  # Fat tissue
+    - "Background"               # No tissue
+    - "Debris"                   # Tissue debris
+    - "Lymphocytes"              # Immune cells
+    - "Mucus"                    # Mucus secretion
+    - "Smooth Muscle"            # Muscle tissue
+    - "Normal Colon Mucosa"      # Healthy tissue
+    - "Cancer-Associated Stroma" # Tumor microenvironment
+    - "Colorectal Adenocarcinoma" # Cancer tissue
+
+data_split:
+  train_ratio: 0.8
+  val_ratio: 0.1
+  test_ratio: 0.1
+  random_seed: 42
+  stratified: true               # Maintain class balance in splits
+
+# Augmentation for histopathology images
+augmentation:
+  train:
+    enable: true
+    level: "standard"            # light, standard, aggressive
+    # Histology-specific augmentation
+    random_horizontal_flip: 0.5  # OK for histology
+    random_vertical_flip: 0.5    # OK for histology (no inherent orientation)
+    random_rotation: 90          # Can rotate 90 degrees
+    random_rotation_continuous: 45  # Also continuous rotation
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+      hue: 0.1
+    elastic_deform: 0.2          # More deformation for tissue
+    gaussian_blur: 0.1
+    gaussian_noise: 0.1
+    normalize:
+      mean: [0.485, 0.456, 0.406]  # ImageNet stats for RGB
+      std: [0.229, 0.224, 0.225]
+  val:
+    enable: true
+    normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+  test:
+    enable: true
+    normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+
+# Model architecture - ResNet50 is standard for pathology
+model:
+  architecture: "resnet"
+  variant: "resnet50"            # ResNet50 good for pathology
+  pretrained: true               # Transfer learning from ImageNet
+  num_classes: 9
+  input_channels: 3
+  dropout_rate: 0.5              # Higher dropout for small medical datasets
+  freeze_backbone: false         # Fine-tune entire network
+  freeze_layers: 0               # 0 = train all, >0 = freeze first N layers
+
+# Training configuration
+training:
+  max_epochs: 100
+  batch_size: 128                # Larger for 28x28 images
+  num_workers: 4
+  learning_rate: 0.001
+  weight_decay: 1e-4
+
+  # Optimizer
+  optimizer:
+    name: "adam"                 # Adam works well for pathology
+    beta1: 0.9
+    beta2: 0.999
+    eps: 1e-8
+
+  # Learning rate schedule
+  scheduler:
+    name: "cosine"
+    T_max: 100
+    eta_min: 1e-6
+    warmup_epochs: 5
+    warmup_type: "linear"
+
+  # Loss function - standard cross-entropy with optional class weights
+  loss:
+    name: "cross_entropy"
+    label_smoothing: 0.1         # Reduce overconfidence
+    class_weights: null          # Auto-compute from dataset or specify manually
+    # Alternative: specify weights if class imbalance
+    # class_weights: [1.0, 1.2, 1.5, 1.3, 1.4, 1.2, 1.0, 1.6, 2.0]
+
+  # Early stopping
+  early_stopping:
+    enable: true
+    monitor_metric: "val_accuracy"
+    mode: "max"
+    patience: 15
+    min_delta: 1e-4
+    restore_best_weights: true
+
+  # Gradient handling
+  gradient:
+    max_norm: 1.0                # Gradient clipping
+    accumulation_steps: 1        # Gradient accumulation for larger effective batch
+
+# Uncertainty estimation
+uncertainty:
+  enable: true
+  methods:
+    - "mc_dropout"
+    - "deep_ensemble"
+    - "temperature_scaling"
+
+  mc_dropout:
+    num_samples: 30              # More samples for better uncertainty
+    dropout_rate: 0.5
+
+  deep_ensemble:
+    num_models: 5                # Ensemble of 5 models
+
+  temperature_scaling:
+    enable: true
+    method: "lbfgs"
+    max_iters: 100
+
+# Triage configuration
+triage:
+  enable: true
+  strategies:
+    - "threshold"                # Uncertainty threshold
+    - "budget_constrained"       # Fixed deferral budget
+    - "cost_sensitive"           # Cost-benefit optimization
+    - "class_specific"           # Different thresholds per class
+
+  threshold_strategy:
+    uncertainty_metric: "predictive_entropy"  # or "max_prob", "mutual_info"
+    percentile: 70               # Defer top 30% uncertain cases
+    adaptive: true               # Adapt threshold based on validation
+
+  budget_strategy:
+    budget_rate: 0.25            # Defer 25% of samples to human
+    selection_method: "uncertainty"  # or "random", "difficult"
+
+  cost_sensitive:
+    ai_error_cost: 50            # Cost of AI making wrong diagnosis
+    human_review_cost: 1         # Cost of human review
+    critical_error_multiplier: 5 # Extra cost for cancer misclassification
+
+  class_specific_strategy:
+    # Different thresholds for different tissue types
+    class_thresholds:
+      - 0.6  # Adipose
+      - 0.7  # Background
+      - 0.7  # Debris
+      - 0.8  # Lymphocytes (harder)
+      - 0.7  # Mucus
+      - 0.8  # Smooth Muscle
+      - 0.8  # Normal Mucosa (important to get right)
+      - 0.9  # Cancer-Associated Stroma (critical)
+      - 0.95 # Colorectal Adenocarcinoma (critical - defer if uncertain)
+
+  # Human expert configuration
+  human_expert:
+    accuracy: 0.95               # Pathologists are highly accurate
+    class_specific_accuracy:
+      - 0.97  # Adipose - easy
+      - 0.98  # Background - easy
+      - 0.95  # Debris - moderate
+      - 0.92  # Lymphocytes - harder
+      - 0.94  # Mucus - moderate
+      - 0.93  # Smooth Muscle - moderate
+      - 0.96  # Normal Mucosa - important
+      - 0.94  # Stroma - critical
+      - 0.98  # Adenocarcinoma - critical, experts excel
+
+  # Critical disease classes (cancer-related)
+  critical_classes: [7, 8]       # Cancer-Associated Stroma, Adenocarcinoma
+
+  # Deferral optimization
+  optimization:
+    objective: "maximize_accuracy"  # or "minimize_cost", "maximize_safety"
+    constraint: "budget"         # or "accuracy", "cost"
+    search_method: "grid"        # or "bayesian", "evolutionary"
+
+# Evaluation configuration
+evaluation:
+  metrics:
+    - "accuracy"
+    - "balanced_accuracy"        # Important for class imbalance
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "auc_roc"
+    - "confusion_matrix"
+    - "per_class_metrics"
+
+  triage_metrics:
+    - "system_accuracy"          # Overall human-AI system accuracy
+    - "automation_rate"          # % handled by AI
+    - "defer_rate"               # % deferred to human
+    - "workload_reduction"       # % reduction in human workload
+    - "safety_metrics"           # Critical error rates
+    - "cost_benefit_analysis"    # Cost savings
+    - "selective_accuracy"       # Accuracy on AI-handled cases
+    - "defer_accuracy"           # Accuracy on deferred cases
+
+  calibration_metrics:
+    - "ece"                      # Expected Calibration Error
+    - "mce"                      # Maximum Calibration Error
+    - "brier_score"              # Brier score
+
+  visualization:
+    - "confusion_matrix"
+    - "roc_curves"
+    - "pr_curves"
+    - "reliability_diagram"
+    - "uncertainty_histogram"
+    - "triage_curves"
+
+# Device configuration
+device:
+  type: "cuda"                   # cuda or cpu
+  distributed: false
+  device_id: 0
+  mixed_precision: false         # FP16 training (faster but may affect small datasets)
+
+# Logging and checkpointing
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  console: true
+  file: true
+  tensorboard: true
+  wandb:
+    enable: false                # Set to true for Weights & Biases tracking
+    project: "triage-learning"
+    entity: null
+    tags: ["pathmnist", "baseline"]
+
+checkpoint:
+  save_strategy: "best"          # best or last or all
+  monitor_metric: "val_accuracy"
+  mode: "max"
+  save_top_k: 3                  # Keep top 3 checkpoints
+  save_every_n_epochs: 10        # Also save periodic checkpoints
+  save_last: true                # Always save last checkpoint
+
+# Reproducibility
+seed: 42
+deterministic: true              # Slower but reproducible
+
+# Hyperparameter presets for different experiment types
+presets:
+  # Quick smoke test (5-10 minutes)
+  quick:
+    max_epochs: 10
+    batch_size: 256
+    learning_rate: 0.001
+    num_workers: 4
+    mc_dropout_samples: 10
+    early_stopping_patience: 5
+
+  # Standard training (1-2 hours)
+  standard:
+    max_epochs: 100
+    batch_size: 128
+    learning_rate: 0.001
+    num_workers: 4
+    mc_dropout_samples: 30
+    early_stopping_patience: 15
+
+  # Extensive training for publication (4-6 hours)
+  extensive:
+    max_epochs: 200
+    batch_size: 64
+    learning_rate: 0.0005
+    num_workers: 8
+    mc_dropout_samples: 50
+    early_stopping_patience: 20
+    deep_ensemble_models: 10
+
+  # High-resolution training (use 224x224 images)
+  high_res:
+    dataset_size: 224
+    max_epochs: 150
+    batch_size: 32              # Smaller batch for larger images
+    learning_rate: 0.0005
+    model_variant: "resnet101"  # Larger model for high-res
+    num_workers: 8
+
+# Experiment tracking notes
+notes: |
+  PathMNIST Configuration for Colon Histopathology Classification
+
+  Dataset: 107,180 images (89,996 train + 10,004 val + 7,180 test)
+  Task: 9-class tissue type classification
+
+  Key Considerations:
+  - Colorectal cancer detection is the critical task
+  - Classes 7 (Stroma) and 8 (Adenocarcinoma) are most important
+  - High human expert accuracy (pathologists)
+  - RGB images with tissue staining patterns
+  - Can use aggressive augmentation (rotation, flip, color jitter)
+
+  Recommended Settings:
+  - Use "standard" preset for baseline experiments
+  - Use "extensive" preset for publication-quality results
+  - Enable triage with class_specific strategy for cancer detection
+  - Set high threshold for cancer classes to ensure safety
+
+  Expected Performance:
+  - Baseline ResNet50: ~90-95% accuracy
+  - With triage (25% defer): ~96-98% system accuracy
+  - MC Dropout helps identify difficult cases
+  - Class imbalance may affect some metrics
