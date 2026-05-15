@@ -1,0 +1,162 @@
+# Base Configuration for Triage Learning System
+
+project:
+  name: "triage-learning-medical-diagnosis"
+  description: "Human-AI Collaboration in Medical Diagnosis"
+  author: "Your Name"
+  version: "0.1.0"
+
+# Experiment tracking
+experiment:
+  name: "baseline_resnet18"
+  tags: ["baseline", "resnet18", "pathmnist"]
+  notes: "Initial baseline experiment"
+  
+# Paths
+paths:
+  data_dir: "./data"
+  output_dir: "./results"
+  checkpoint_dir: "./experiments"
+  log_dir: "./logs"
+
+# Dataset configuration
+dataset:
+  name: "pathmnist"              # Options: pathmnist, chestmnist, dermamnist
+  data_flag: "pathmnist"
+  download: true
+  size: 28                       # Image size (28 or 224)
+  num_classes: 9
+  input_channels: 3
+  as_rgb: true
+  
+# Data splits
+data_split:
+  train_ratio: 0.8
+  val_ratio: 0.1
+  test_ratio: 0.1
+  random_seed: 42
+
+# Data augmentation
+augmentation:
+  train:
+    enable: true
+    random_horizontal_flip: 0.5
+    random_vertical_flip: 0.5
+    random_rotation: 15
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+    normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+  test:
+    normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+
+# Model architecture
+model:
+  name: "resnet18"               # Options: resnet18, resnet50, densenet121, efficientnet_b0, vit_small
+  pretrained: true
+  dropout_rate: 0.5
+  num_classes: 9
+  freeze_backbone: false
+  freeze_layers: 0               # Number of layers to freeze from beginning
+
+# Training configuration
+training:
+  batch_size: 128
+  num_epochs: 100
+  num_workers: 4
+  pin_memory: true
+  
+  # Optimizer
+  optimizer:
+    type: "adam"                 # Options: adam, sgd, adamw
+    lr: 0.001
+    weight_decay: 0.0001
+    momentum: 0.9                # For SGD
+    betas: [0.9, 0.999]         # For Adam/AdamW
+    
+  # Learning rate scheduler
+  scheduler:
+    type: "cosine"               # Options: step, cosine, plateau, exponential
+    step_size: 30                # For StepLR
+    gamma: 0.1
+    T_max: 100                   # For CosineAnnealingLR
+    patience: 10                 # For ReduceLROnPlateau
+    
+  # Loss function
+  loss:
+    type: "cross_entropy"        # Options: cross_entropy, focal_loss, label_smoothing
+    label_smoothing: 0.1
+    class_weights: null          # Will be computed from data if null
+    
+  # Early stopping
+  early_stopping:
+    enable: true
+    patience: 15
+    min_delta: 0.001
+    monitor: "val_accuracy"
+    mode: "max"
+
+# Uncertainty quantification
+uncertainty:
+  method: "mc_dropout"           # Options: mc_dropout, deep_ensemble, temperature_scaling
+  mc_dropout:
+    num_samples: 30              # Number of forward passes
+    dropout_rate: 0.5
+  deep_ensemble:
+    num_models: 5
+  temperature_scaling:
+    enable: true
+    
+# Triage system
+triage:
+  policy: "threshold"            # Options: threshold, top_k, budget_constrained
+  threshold:
+    uncertainty_metric: "entropy" # Options: entropy, mutual_information, variance
+    initial_threshold: 0.5
+    optimization: true           # Optimize threshold on validation set
+  deferral:
+    human_accuracy: 0.95         # Simulated human expert accuracy
+    human_error_distribution: "confidence_based" # How human errors correlate with difficulty
+    
+# Evaluation
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "auroc"
+    - "auprc"
+  calibration:
+    bins: 15
+    compute_ece: true            # Expected Calibration Error
+    compute_mce: true            # Maximum Calibration Error
+  triage_metrics:
+    - "automation_rate"
+    - "deferred_accuracy"
+    - "system_accuracy"
+    - "performance_gain"
+
+# Reproducibility
+reproducibility:
+  seed: 42
+  deterministic: true
+  benchmark: false               # Set to true for faster training if input size is constant
+
+# Logging and checkpointing
+logging:
+  log_interval: 10               # Log every N batches
+  use_wandb: true
+  use_tensorboard: true
+  save_frequency: 5              # Save checkpoint every N epochs
+  save_best_only: true
+  
+# Device configuration
+device:
+  type: "cuda"                   # Options: cuda, cpu, mps
+  gpu_ids: [0]                   # List of GPU IDs to use

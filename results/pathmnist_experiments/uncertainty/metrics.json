@@ -1,0 +1,11 @@
+{
+  "uncertainty_mean": 0.5827288627624512,
+  "uncertainty_std": 0.2635309100151062,
+  "uncertainty_min": 0.0,
+  "uncertainty_max": 1.8527886867523193,
+  "error_rate": 0.1096100278551532,
+  "num_errors": 787,
+  "num_correct": 6393,
+  "uncertainty_error_spearman": 0.4125374750110457,
+  "uncertainty_error_pointbiserial": 0.49795765200459
+}

@@ -1,0 +1,59 @@
+
+TRIAGE SYSTEM ANALYSIS REPORT
+=============================
+
+BASELINE PERFORMANCE
+--------------------
+Model Accuracy (no triage): 0.8904
+Total Samples: 7180
+
+OPTIMAL THRESHOLD ANALYSIS
+--------------------------
+Best for System Accuracy:
+  Threshold: 0.4916
+  Deferral Rate: 36.1%
+  AI Accuracy: 0.9856
+  System Accuracy: 0.9735
+  Improvement over baseline: 0.0831
+
+Best for Cost:
+  Threshold: 0.4159
+  Deferral Rate: 91.9%
+  Total Cost: $6,798.00
+  Cost saved vs. full AI: $711,202.00
+
+HUMAN ACCURACY SENSITIVITY ANALYSIS
+------------------------------------
+
+Human Accuracy: 80%
+  System Accuracy: 0.9263
+  Cost: $9,192.00
+  Improvement: 0.0359
+
+Human Accuracy: 90%
+  System Accuracy: 0.9597
+  Cost: $9,192.00
+  Improvement: 0.0694
+
+Human Accuracy: 95%
+  System Accuracy: 0.9735
+  Cost: $9,192.00
+  Improvement: 0.0831
+
+Human Accuracy: 99%
+  System Accuracy: 0.9875
+  Cost: $9,192.00
+  Improvement: 0.0971
+
+
+INTERPRETATION
+--------------
+1. If system_accuracy > baseline: Triage is beneficial
+2. Higher human_accuracy → higher system_accuracy (expected)
+3. Optimal threshold balances automation rate and accuracy
+4. Cost analysis considers both AI errors and human review effort
+
+Key Recommendations:
+- Choose threshold balancing accuracy and automation rate
+- Monitor actual human accuracy in deployment
+- Periodically retrain model to improve AI performance

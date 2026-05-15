@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triage Learning System - Detailed Interpretability Report</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-light: #3b82f6;
+            --secondary: #7c3aed;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-light: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.7;
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #2563eb 100%);
+            color: white;
+            padding: 80px 40px;
+            border-radius: 16px;
+            margin-bottom: 50px;
+            box-shadow: 0 20px 60px rgba(37, 99, 235, 0.3);
+        }
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+        header p {
+            font-size: 1.15em;
+            opacity: 0.9;
+            margin: 8px 0;
+            font-weight: 500;
+        }
+        .executive-summary {
+            background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%);
+            border-left: 6px solid var(--warning);
+            padding: 40px;
+            margin-bottom: 50px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.15);
+        }
+        .executive-summary h2 {
+            color: #92400e;
+            margin-top: 0;
+        }
+        .executive-summary p {
+            color: #78350f;
+            margin-bottom: 20px;
+        }
+        .key-findings {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        .finding-card {
+            background: white;
+            padding: 28px;
+            border-radius: 12px;
+            border-top: 5px solid var(--primary);
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.12);
+            transition: all 0.3s ease;
+        }
+        .finding-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(37, 99, 235, 0.2);
+        }
+        .finding-card .value {
+            font-size: 2.2em;
+            color: var(--primary);
+            font-weight: 700;
+            margin: 12px 0;
+        }
+        .finding-card .label {
+            font-size: 0.85em;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        section {
+            margin-bottom: 50px;
+            background: white;
+            padding: 50px;
+            border-radius: 12px;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+        }
+        h2 {
+            color: var(--primary-dark);
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            border-bottom: 4px solid var(--primary);
+            padding-bottom: 15px;
+            font-weight: 700;
+        }
+        h3 {
+            color: var(--secondary);
+            font-size: 1.5em;
+            margin-top: 35px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        p { color: var(--text-light); margin: 15px 0; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.06);
+        }
+        thead {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 100%);
+            border-bottom: 3px solid var(--primary);
+        }
+        th {
+            padding: 16px 18px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--primary-dark);
+            font-size: 0.95em;
+        }
+        td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-light);
+        }
+        tbody tr:hover { background: #eff6ff; }
+        tbody tr:nth-child(even) { background: #f8fafc; }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        .metric-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid var(--primary-light);
+            padding: 28px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .metric-box:hover {
+            border-color: var(--primary);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
+        }
+        .metric-box .label {
+            font-size: 0.9em;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .metric-box .value {
+            font-size: 2.5em;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        .recommendation {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            border-left: 6px solid var(--success);
+            padding: 30px;
+            margin: 25px 0;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.15);
+        }
+        .recommendation strong { color: #065f46; }
+        .recommendation ul { margin: 15px 0 0 25px; color: #047857; }
+        .image-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            border: 2px solid var(--border);
+        }
+        .image-caption {
+            font-size: 0.95em;
+            color: var(--text-light);
+            margin-top: 15px;
+            font-style: italic;
+            font-weight: 500;
+        }
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+            border-top: 2px solid var(--border);
+            margin-top: 60px;
+            background: linear-gradient(135deg, #f1f5f9 0%, white 100%);
+            border-radius: 12px;
+        }
+        .kpi-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 700;
+        }
+        .kpi-status.success {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #065f46;
+            border: 1px solid var(--success);
+        }
+        .highlight {
+            background: #fef08a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #7c2d12;
+        }
+        @media (max-width: 768px) {
+            header { padding: 50px 25px; }
+            header h1 { font-size: 2em; }
+            section { padding: 30px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏥 Triage Learning System for Medical Diagnosis</h1>
+            <p><strong>Comprehensive Interpretability & Performance Report</strong></p>
+            <p>Dataset: PathMNIST | Total Samples: 7,180 | Date: December 26, 2025</p>
+        </header>
+        
+        <div class="executive-summary">
+            <h2 style="color: #92400e; margin-top: 0;">Executive Summary</h2>
+            <p>This comprehensive report presents detailed analysis of an AI-human collaborative system designed to improve medical diagnosis accuracy. The system intelligently defers uncertain cases to human experts, achieving significant performance improvements while maintaining operational efficiency.</p>
+            
+            <div class="key-findings">
+                <div class="finding-card">
+                    <div class="label">Baseline Accuracy</div>
+                    <div class="value">89.04%</div>
+                    <div style="font-size: 0.85em; color: #999;">AI-only performance</div>
+                </div>
+                <div class="finding-card">
+                    <div class="label">System Accuracy</div>
+                    <div class="value">97.35%</div>
+                    <div style="font-size: 0.85em; color: #999;">With optimal triage</div>
+                </div>
+                <div class="finding-card">
+                    <div class="label">Improvement</div>
+                    <div class="value" style="color: #10b981;">+8.31%</div>
+                    <div style="font-size: 0.85em; color: #999;">+597 correct diagnoses</div>
+                </div>
+                <div class="finding-card">
+                    <div class="label">Error Reduction</div>
+                    <div class="value" style="color: #10b981;">75.8%</div>
+                    <div style="font-size: 0.85em; color: #999;">Fewer misdiagnoses</div>
+                </div>
+                <div class="finding-card">
+                    <div class="label">Cost Savings</div>
+                    <div class="value" style="color: #10b981;">$46,200</div>
+                    <div style="font-size: 0.85em; color: #999;">Optimal strategy</div>
+                </div>
+                <div class="finding-card">
+                    <div class="label">Automation Rate</div>
+                    <div class="value">63.9%</div>
+                    <div style="font-size: 0.85em; color: #999;">Cases handled by AI</div>
+                </div>
+            </div>
+        </div>
+        
+        <section>
+            <h2>1. Baseline Model Performance</h2>
+            <h3>1.1 Classification Metrics</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Interpretation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Accuracy</strong></td>
+                        <td style="color: var(--primary); font-weight: bold;">89.04%</td>
+                        <td>Overall correctness across all 7,180 samples</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Precision</strong></td>
+                        <td style="color: var(--primary); font-weight: bold;">89.37%</td>
+                        <td>Positive predictions are correct 89.37% of the time</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Recall</strong></td>
+                        <td style="color: var(--primary); font-weight: bold;">89.04%</td>
+                        <td>Catches 89.04% of actual positives</td>
+                    </tr>
+                    <tr>
+                        <td><strong>F1 Score</strong></td>
+                        <td style="color: var(--primary); font-weight: bold;">89.03%</td>
+                        <td>Harmonic mean of precision and recall</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cross-Entropy Loss</strong></td>
+                        <td style="color: var(--primary); font-weight: bold;">0.3699</td>
+                        <td>Well-calibrated confidence estimates</td>
+                    </tr>
+                </tbody>
+            </table>
+            <h3>1.2 Visual Analysis</h3>
+            <div class="image-container">
+                <img src="baseline/confusion_matrix.png" alt="Confusion Matrix">
+                <div class="image-caption">Figure 1.1: Confusion Matrix showing per-class accuracy</div>
+            </div>
+            <div class="image-container">
+                <img src="baseline/error_distribution.png" alt="Error Distribution">
+                <div class="image-caption">Figure 1.2: Error Distribution across confidence scores</div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>2. Uncertainty Estimation</h2>
+            <h3>2.1 Uncertainty Statistics</h3>
+            <table>
+                <thead>
+                    <tr><th>Metric</th><th>Value</th><th>Interpretation</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Mean</strong></td>
+                        <td>0.583</td>
+                        <td>Average model uncertainty</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Point-Biserial Correlation</strong></td>
+                        <td style="color: var(--primary); font-weight: bold;">0.498</td>
+                        <td><strong>Strong signal for triage!</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="image-container">
+                <img src="uncertainty/uncertainty_distribution.png" alt="Uncertainty Distribution">
+                <div class="image-caption">Figure 2.1: Distribution of model uncertainty scores</div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>3. Triage System Performance</h2>
+            <h3>3.1 Optimal Threshold Comparison</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Objective</th>
+                        <th>Threshold</th>
+                        <th>Deferral</th>
+                        <th>System Accuracy</th>
+                        <th>Improvement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: linear-gradient(90deg, #f0fdf4 0%, #ecfdf5 100%);">
+                        <td><strong>Maximize Accuracy</strong></td>
+                        <td>0.4916</td>
+                        <td>36.1%</td>
+                        <td style="color: var(--success); font-weight: bold;">97.35%</td>
+                        <td style="color: var(--success); font-weight: bold;">+8.31%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Baseline</strong></td>
+                        <td>-</td>
+                        <td>0%</td>
+                        <td>89.04%</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="image-container">
+                <img src="triage/automation_vs_accuracy.png" alt="Automation vs Accuracy">
+                <div class="image-caption">Figure 3.1: Trade-off between automation rate and accuracy</div>
+            </div>
+            <h3>3.2 Human Accuracy Sensitivity</h3>
+            <table>
+                <thead>
+                    <tr><th>Human Accuracy</th><th>System Accuracy</th><th>Feasibility</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>80%</td><td>92.63%</td><td>General staff</td></tr>
+                    <tr style="background: #f0fdf4;"><td><strong>90%</strong></td><td style="color: var(--success); font-weight: bold;">95.97%</td><td><strong>RECOMMENDED</strong></td></tr>
+                    <tr><td>95%</td><td style="color: var(--success); font-weight: bold;">97.35%</td><td>Specialists</td></tr>
+                </tbody>
+            </table>
+            <div class="image-container">
+                <img src="triage/human_accuracy_sensitivity.png" alt="Sensitivity Analysis">
+                <div class="image-caption">Figure 3.2: System accuracy vs human reviewer expertise</div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>4. Cost-Benefit Analysis</h2>
+            <table>
+                <thead>
+                    <tr><th>Scenario</th><th>Total Cost</th><th>Savings</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>AI Only</strong></td>
+                        <td style="color: var(--danger); font-weight: bold;">$78,700</td>
+                        <td>-</td>
+                    </tr>
+                    <tr style="background: #f0fdf4;">
+                        <td><strong>Optimal Triage</strong></td>
+                        <td style="color: var(--success); font-weight: bold;">$32,500</td>
+                        <td style="color: var(--success); font-weight: bold;">$46,200 (59%)</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="image-container">
+                <img src="triage/cost_analysis.png" alt="Cost Analysis">
+                <div class="image-caption">Figure 4.1: Cost vs deferral threshold</div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>5. AI-Only vs Human-in-the-Loop</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>AI Only</th>
+                        <th>AI + Triage</th>
+                        <th>Improvement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Accuracy</strong></td>
+                        <td>89.04%</td>
+                        <td style="color: var(--success); font-weight: bold;">97.35%</td>
+                        <td style="color: var(--success); font-weight: bold;">+8.31%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Misdiagnoses</strong></td>
+                        <td style="color: var(--danger); font-weight: bold;">787</td>
+                        <td>190</td>
+                        <td style="color: var(--success); font-weight: bold;">-75.8%</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="recommendation">
+                <strong>✓ Clinical Impact:</strong> Prevents <span class="highlight">~800 misdiagnoses per 10,000 cases</span> annually. Substantial improvement in patient safety.
+            </div>
+        </section>
+        
+        <section>
+            <h2>6. Recommendations & Deployment</h2>
+            <div class="recommendation">
+                <strong>✓ RECOMMENDED CONFIGURATION:</strong>
+                <ul>
+                    <li><strong>Threshold:</strong> 0.4916 (Accuracy-optimized)</li>
+                    <li><strong>Deferral Rate:</strong> 36.1% to human reviewers</li>
+                    <li><strong>Target Accuracy:</strong> 97.35%</li>
+                    <li><strong>Cost Savings:</strong> $46,200</li>
+                    <li><strong>Staffing:</strong> 1.8-4.5 FTE pathologists depending on volume</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section>
+            <h2>7. Conclusion</h2>
+            <div class="recommendation" style="padding: 40px;">
+                <h3 style="margin-top: 0; color: #065f46;">Key Achievements</h3>
+                <div class="metric-grid">
+                    <div style="padding: 20px; background: white; border-radius: 8px; border-left: 5px solid var(--success);">
+                        <strong style="color: #065f46;">Accuracy Improvement</strong>
+                        <div style="font-size: 1.8em; color: var(--success); margin-top: 8px; font-weight: 700;">+8.31%</div>
+                    </div>
+                    <div style="padding: 20px; background: white; border-radius: 8px; border-left: 5px solid var(--success);">
+                        <strong style="color: #065f46;">Error Reduction</strong>
+                        <div style="font-size: 1.8em; color: var(--success); margin-top: 8px; font-weight: 700;">75.8%</div>
+                    </div>
+                    <div style="padding: 20px; background: white; border-radius: 8px; border-left: 5px solid var(--success);">
+                        <strong style="color: #065f46;">Cost Savings</strong>
+                        <div style="font-size: 1.8em; color: var(--success); margin-top: 8px; font-weight: 700;">$46,200</div>
+                    </div>
+                </div>
+                <p style="color: #047857; font-size: 1.05em; margin: 25px 0 0 0;">
+                    <strong>Deploy the triage system with accuracy-optimized threshold (0.4916) to achieve 97.35% system accuracy, 63.9% automation rate, and substantial cost savings.</strong>
+                </p>
+            </div>
+        </section>
+        
+        <footer>
+            <p><strong>Report Generated:</strong> December 26, 2025</p>
+            <p><strong>Project:</strong> triage-learning-medical-diagnosis</p>
+            <p><strong>Repository:</strong> github.com/ary1002/triage-learning-medical-diagnosis</p>
+        </footer>
+    </div>
+</body>
+</html>

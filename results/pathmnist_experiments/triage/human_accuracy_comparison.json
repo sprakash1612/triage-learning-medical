@@ -1,0 +1,50 @@
+{
+  "0.8": {
+    "threshold": 0.49155616760253906,
+    "deferral_rate": 0.36100278551532033,
+    "automation_rate": 0.6389972144846796,
+    "ai_accuracy": 0.9856146469049695,
+    "system_accuracy": 0.9263231197771588,
+    "human_accuracy": 0.8,
+    "ai_errors": 66,
+    "total_cost": 9192.0,
+    "cost_ai_errors": 6600.0,
+    "cost_human_reviews": 2592.0
+  },
+  "0.9": {
+    "threshold": 0.49155616760253906,
+    "deferral_rate": 0.36100278551532033,
+    "automation_rate": 0.6389972144846796,
+    "ai_accuracy": 0.9856146469049695,
+    "system_accuracy": 0.95974930362117,
+    "human_accuracy": 0.9,
+    "ai_errors": 66,
+    "total_cost": 9192.0,
+    "cost_ai_errors": 6600.0,
+    "cost_human_reviews": 2592.0
+  },
+  "0.95": {
+    "threshold": 0.49155616760253906,
+    "deferral_rate": 0.36100278551532033,
+    "automation_rate": 0.6389972144846796,
+    "ai_accuracy": 0.9856146469049695,
+    "system_accuracy": 0.9735376044568245,
+    "human_accuracy": 0.95,
+    "ai_errors": 66,
+    "total_cost": 9192.0,
+    "cost_ai_errors": 6600.0,
+    "cost_human_reviews": 2592.0
+  },
+  "0.99": {
+    "threshold": 0.49155616760253906,
+    "deferral_rate": 0.36100278551532033,
+    "automation_rate": 0.6389972144846796,
+    "ai_accuracy": 0.9856146469049695,
+    "system_accuracy": 0.9874651810584958,
+    "human_accuracy": 0.99,
+    "ai_errors": 66,
+    "total_cost": 9192.0,
+    "cost_ai_errors": 6600.0,
+    "cost_human_reviews": 2592.0
+  }
+}
